@@ -5,10 +5,11 @@
 
 ## Problem
 
-The agency (Jacob and his business partner) needs a branded, on-domain link page it fully controls for each
-client, both as a deliverable and as evidence (click data) to support brand-deal pitches — the
-thing the agency is paid a commission on. Custom Adventurist, becoming a client, is the first to use it;
-Kimball AI is next. See `sprints/sprint-1-plan.md` and `decisions/001-stack-choice.md`.
+The agency (Jacob and his business partner) needs a branded, on-domain link page it fully
+controls for each client, both as a deliverable and as evidence (click data) to support
+brand-deal pitches — the thing the agency is paid a commission on. Custom Adventurist, becoming
+a client, is the first to use it; Kimball AI is next. See `sprints/sprint-1-plan.md` and
+`decisions/001-stack-choice.md`.
 
 ## What we're building
 

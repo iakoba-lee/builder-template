@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // This repo's CLAUDE.md is a hand-maintained project brief (see the file
-  // itself) — don't let `next dev`/`next build` append agent-rules content
-  // to it or to a generated AGENTS.md.
+  // AGENTS.md is a hand-maintained project brief with an append-only rules
+  // section — don't let `next dev`/`next build` generate into it or into the
+  // CLAUDE.md that imports it.
   agentRules: false,
 };
 

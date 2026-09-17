@@ -15,11 +15,12 @@ Fill this in during Sprint 1 and keep it current. Every sprint is read against i
 - **Who it is for:** The agency's brand-deal clients. Custom Adventurist first, Kimball AI next.
   Not a consumer product — the admin users are the agency team, the public page visitors are
   each client's audience.
-- **My role:** Solo builder. co-owner of the agency itself with one business partner — Jacob runs
-  day-to-day ops, hiring, and delivery; the partner owns brand, story, marketing, sales, and content.
+- **My role:** Solo builder, and co-owner of the agency itself with one business partner —
+  Jacob runs day-to-day ops, hiring, and delivery; the partner owns brand, story, marketing,
+  sales, and content.
 - **My user:** The agency's clients. This product serves them; it is not part of Custom
-  Adventurist's own brand, Kimball AI's own brand, or the partner's personal brand — keep those three
-  distinct even as the tooling serves all of them.
+  Adventurist's own brand, Kimball AI's own brand, or the partner's personal brand — keep those
+  three distinct even as the tooling serves all of them.
 
 If your situation changes, revise this and note what changed. That is normal; a silent
 mismatch between this file and your work is not.
@@ -87,5 +88,7 @@ Each sprint:
   alternatives you rejected.
 - **No real customer contact details anywhere in this repo.** Anonymize people in interview
   notes: "dental office manager, Provo" rather than a name and an email.
-- **Keep `CLAUDE.md` current.** It is what your agent knows about your work. Stale context
-  produces bad output.
+- **Keep `AGENTS.md` current.** It is what your agent knows about your work, and it is read by
+  Cursor, Codex, and Copilot directly; `CLAUDE.md` is a one-line import of it so Claude Code
+  loads the same brief. Stale context produces bad output. Its "Learned Rules" section is
+  append-only: when you correct the agent, the correction gets written down.
