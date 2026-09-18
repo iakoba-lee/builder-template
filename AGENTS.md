@@ -23,7 +23,8 @@ act like a colleague who already knows what you are working on and why.
 - **This sprint's goal:** Ship the multi-tenant Linktree replacement for Custom Adventurist —
   admin login, content/theme/link management, click tracking, and basic analytics — live on
   `customadventurist.com`. See `sprints/sprint-1-plan.md`.
-- **Live at:** Not yet deployed. Target: `customadventurist.com` via Vercel.
+- **Live at:** Deployed to Vercel (`agency-x-zeta.vercel.app`). `customadventurist.com` DNS points
+  at Vercel; HTTPS on the custom domain is still being verified.
 - **Biggest open risk:** The first client, Custom Adventurist, is the partner's own influencer
   business, not an arm's-length client. Watch that this stays a repeatable agency product
   (provable on the second client next) rather than drifting into bespoke internal tooling for

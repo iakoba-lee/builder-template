@@ -3,7 +3,8 @@
 > A multi-tenant Linktree replacement with click analytics, built by a creator-growth agency for
 > its own influencer clients. First client: Custom Adventurist.
 
-**Live:** Not yet deployed. Target: `customadventurist.com`
+**Live:** Deployed to Vercel (`agency-x-zeta.vercel.app`). `customadventurist.com` DNS is pointed at
+Vercel; HTTPS on the custom domain is still being verified — see `decisions/003-domain-attach-method.md`.
 **Built by:** Jacob, MSB 341 Product Management, BYU
 
 ## Context
