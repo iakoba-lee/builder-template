@@ -10,6 +10,11 @@ export async function requireUser() {
   if (!user) {
     redirect("/admin/login");
   }
+  const { data: isAdmin } = await supabase.rpc("is_admin_email");
+  if (!isAdmin) {
+    await supabase.auth.signOut();
+    redirect("/admin/login?error=not-authorized");
+  }
   return { supabase, user };
 }
 

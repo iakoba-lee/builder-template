@@ -1,17 +1,31 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type Status = "idle" | "working" | "sent" | "error";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<Status>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const notAuthorized = searchParams.get("error") === "not-authorized";
+  const [status, setStatus] = useState<Status>(
+    notAuthorized ? "error" : "idle",
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    notAuthorized ? "That account isn't authorized for the admin panel." : null,
+  );
 
   useEffect(() => {
     const supabase = createClient();

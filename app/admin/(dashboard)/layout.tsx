@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getPrimaryClient } from "@/lib/data";
+import { getPrimaryClient, requireUser } from "@/lib/data";
 import { AdminNav } from "./admin-nav";
 
 export const dynamic = "force-dynamic";
@@ -10,13 +8,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/admin/login");
-  }
+  const { supabase } = await requireUser();
 
   const loaded = await getPrimaryClient(supabase);
   const slug = loaded?.client.slug ?? "page";
