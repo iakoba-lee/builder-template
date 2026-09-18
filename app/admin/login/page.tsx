@@ -6,6 +6,21 @@ import { createClient } from "@/lib/supabase/client";
 
 type Status = "idle" | "working" | "sent" | "error";
 
+// Auth stays on the agency host (decisions/002-domain-routing.md). Client
+// custom domains are public pages only, so a magic-link request from one
+// must not use that origin as the callback.
+function authCallbackUrl() {
+  const { origin, hostname } = window.location;
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname.endsWith(".vercel.app")
+  ) {
+    return `${origin}/admin/auth/callback`;
+  }
+  return "https://agency-x-zeta.vercel.app/admin/auth/callback";
+}
+
 export default function LoginPage() {
   return (
     <Suspense>
@@ -67,7 +82,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/admin/auth/callback`,
+        emailRedirectTo: authCallbackUrl(),
       },
     });
     if (error) {
