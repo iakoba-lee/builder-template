@@ -31,6 +31,7 @@ mismatch between this file and your work is not.
 | Folder | What lives here |
 |---|---|
 | `sprints/` | One plan and one review per sprint |
+| `builder-resources/` | Reading list and tutor prompts per Builder axis, for self-study between sprints |
 | `discovery/` | Interviews, personas, what you learned about your user |
 | `design/` | Flows, screens, usability test notes |
 | `specs/` | One spec per feature, written before building it |
