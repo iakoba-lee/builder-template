@@ -25,3 +25,17 @@ already works well, so rebuilding that is a later sprint.
 - Custom Adventurist is configured end-to-end as a smoke test: content, theme, and links.
 
 **Predicted difficulty:** 3.7
+
+**Actual difficulty:** 1.5
+
+**Why it differed:** Prior experience building and hosting with Supabase/Vercel this summer,
+plus existing familiarity with CNAME/DNS from Go High Level, made the one genuinely new piece
+(attaching a real domain) much less difficult than expected.
+
+**Retro:** Hit the goal, and hit it much faster and more easily than predicted. That's a signal
+to raise the bar on what's worth building next, not to relax it — with these tools, the
+constraint isn't build speed anymore, it's picking the right thing to build. Before starting
+the next big build (a software product to make the brand-manager job itself easier), the plan
+is to audit and document the actual day-to-day process in detail first, including interviews
+with others who experience the same pain, and only then figure out what to simplify and build.
+That audit/documentation work — not a build — is the likely candidate for what comes next.
