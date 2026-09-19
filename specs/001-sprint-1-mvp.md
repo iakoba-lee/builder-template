@@ -40,16 +40,16 @@ links) as the smoke test, live on `customadventurist.com` with valid HTTPS.
 
 ## Definition of done
 
-- [ ] Every table is multi-tenant: `clients` (name, slug, custom_domain) plus `client_id` on
+- [x] Every table is multi-tenant: `clients` (name, slug, custom_domain) plus `client_id` on
       every link, theme setting, and click event.
-- [ ] Agency team member logs in to the admin panel via magic link.
-- [ ] Admin can edit a client's title, bio, and profile picture.
-- [ ] Admin can set a client's colors and font, reflected on the public page.
-- [ ] Admin can add, edit, delete, and reorder links.
-- [ ] Public page renders correctly on mobile and desktop.
-- [ ] Clicking a link redirects correctly and records a click event, including device and
+- [x] Agency team member logs in to the admin panel via magic link.
+- [x] Admin can edit a client's title, bio, and profile picture.
+- [x] Admin can set a client's colors and font, reflected on the public page.
+- [x] Admin can add, edit, delete, and reorder links.
+- [x] Public page renders correctly on mobile and desktop.
+- [x] Clicking a link redirects correctly and records a click event, including device and
       country.
-- [ ] Admin can view, per client: total clicks, clicks-over-time chart, top links.
-- [ ] Deployed to a live Vercel environment the agency team can access.
-- [ ] `customadventurist.com` attached in Vercel, serving over valid HTTPS.
-- [ ] Custom Adventurist configured end-to-end (content, theme, links) as the smoke test.
+- [x] Admin can view, per client: total clicks, clicks-over-time chart, top links.
+- [x] Deployed to a live Vercel environment the agency team can access.
+- [x] `customadventurist.com` attached in Vercel, serving over valid HTTPS.
+- [x] Custom Adventurist configured end-to-end (content, theme, links) as the smoke test.
