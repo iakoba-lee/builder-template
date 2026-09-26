@@ -20,11 +20,14 @@ act like a colleague who already knows what you are working on and why.
 
 ## Current state
 
-- **This sprint's goal:** Ship the multi-tenant Linktree replacement for Custom Adventurist —
-  admin login, content/theme/link management, click tracking, and basic analytics — live on
-  `customadventurist.com`. See `sprints/sprint-1-plan.md`.
-- **Live at:** Deployed to Vercel (`agency-x-zeta.vercel.app`). `customadventurist.com` DNS points
-  at Vercel; HTTPS on the custom domain is still being verified.
+- **This sprint's goal:** Discovery, not a build. Complete 5–10 interviews (creators seeking
+  sponsorships, the agency's current clients, and any brands) and write a synthesis of the pains
+  creators experience, the solutions they have tried, and the language they use. See
+  `sprints/sprint-2-plan.md`. Build ideas deferred from this sprint are in `BACKLOG.md`.
+- **Last sprint:** Sprint 1 shipped the multi-tenant link page for Custom Adventurist — see
+  `sprints/sprint-1-review.md`.
+- **Live at:** Deployed to Vercel (`agency-x-zeta.vercel.app`) and on `customadventurist.com`
+  over valid HTTPS (confirmed in the Sprint 1 review).
 - **Biggest open risk:** The first client, Custom Adventurist, is the partner's own influencer
   business, not an arm's-length client. Watch that this stays a repeatable agency product
   (provable on the second client next) rather than drifting into bespoke internal tooling for
