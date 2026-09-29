@@ -19,7 +19,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Link page",
-  description: "Agency link page admin and public pages",
+  description: "Admin for agency link pages",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

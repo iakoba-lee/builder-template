@@ -1,8 +1,45 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fontStack } from "@/lib/display";
 import { markForUrl } from "@/lib/link-mark";
 import type { Client, LinkRow, ThemeSettings } from "@/lib/types";
+
+async function getClientBySlug(slug: string) {
+  const supabase = await createClient();
+  const { data: client } = await supabase
+    .from("clients")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  return client as Client | null;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const client = await getClientBySlug(slug);
+
+  if (!client) {
+    return { title: "Link page" };
+  }
+
+  const description = `Links, brand deals, and socials from ${client.name}.`;
+
+  return {
+    title: client.name,
+    description,
+    icons: client.avatar_url ? { icon: client.avatar_url } : undefined,
+    openGraph: {
+      title: client.name,
+      description,
+      images: client.avatar_url ? [{ url: client.avatar_url }] : undefined,
+    },
+  };
+}
 
 export default async function PublicPage({
   params,
@@ -10,16 +47,13 @@ export default async function PublicPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
-  const { data: client } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
+  const client = await getClientBySlug(slug);
 
   if (!client) {
     notFound();
   }
+
+  const supabase = await createClient();
 
   const [{ data: theme }, { data: links }] = await Promise.all([
     supabase
@@ -36,7 +70,7 @@ export default async function PublicPage({
 
   return (
     <PublicLinkPage
-      client={client as Client}
+      client={client}
       theme={(theme as ThemeSettings | null) ?? null}
       links={(links as LinkRow[]) ?? []}
     />
