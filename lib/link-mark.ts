@@ -1,6 +1,13 @@
 export type LinkMark = {
   background: string;
-  kind: "amazon" | "youtube" | "instagram" | "tiktok" | "kickstarter" | "link";
+  kind:
+    | "amazon"
+    | "youtube"
+    | "instagram"
+    | "tiktok"
+    | "x"
+    | "kickstarter"
+    | "link";
 };
 
 export function markForUrl(url: string, accent: string): LinkMark {
@@ -22,6 +29,9 @@ export function markForUrl(url: string, accent: string): LinkMark {
     }
     if (host.includes("tiktok")) {
       return { background: "#111111", kind: "tiktok" };
+    }
+    if (host === "x.com" || host.includes("twitter.com")) {
+      return { background: "#111111", kind: "x" };
     }
     if (host.includes("kickstarter")) {
       return { background: "#05ce78", kind: "kickstarter" };

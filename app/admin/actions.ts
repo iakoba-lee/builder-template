@@ -12,6 +12,13 @@ async function requireOwnedClient(clientId: string) {
   return { supabase, client: loaded.client };
 }
 
+function normalizeUrl(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 export async function updateProfile(formData: FormData) {
   const clientId = String(formData.get("clientId") ?? "");
   const name = String(formData.get("name") ?? "").trim();
@@ -56,7 +63,9 @@ export async function updateTheme(formData: FormData) {
 export async function addLink(formData: FormData) {
   const clientId = String(formData.get("clientId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
-  const url = String(formData.get("url") ?? "").trim();
+  const url = normalizeUrl(String(formData.get("url") ?? ""));
+  const placementRaw = String(formData.get("placement") ?? "page");
+  const placement = placementRaw === "profile" ? "profile" : "page";
   if (!title || !url) {
     return { error: "Title and URL are required." };
   }
@@ -65,6 +74,7 @@ export async function addLink(formData: FormData) {
     .from("links")
     .select("position")
     .eq("client_id", client.id)
+    .eq("placement", placement)
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -72,6 +82,7 @@ export async function addLink(formData: FormData) {
     client_id: client.id,
     title,
     url,
+    placement,
     position: (last?.position ?? -1) + 1,
   });
   if (error) return { error: error.message };
@@ -83,7 +94,7 @@ export async function updateLink(formData: FormData) {
   const clientId = String(formData.get("clientId") ?? "");
   const linkId = String(formData.get("linkId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
-  const url = String(formData.get("url") ?? "").trim();
+  const url = normalizeUrl(String(formData.get("url") ?? ""));
   if (!title || !url) {
     return { error: "Title and URL are required." };
   }
@@ -117,10 +128,19 @@ export async function moveLink(formData: FormData) {
   const linkId = String(formData.get("linkId") ?? "");
   const direction = String(formData.get("direction") ?? "");
   const { supabase, client } = await requireOwnedClient(clientId);
+  const { data: target } = await supabase
+    .from("links")
+    .select("id, placement")
+    .eq("id", linkId)
+    .eq("client_id", client.id)
+    .maybeSingle();
+  if (!target) return { error: "Link not found." };
+
   const { data: links } = await supabase
     .from("links")
     .select("id, position")
     .eq("client_id", client.id)
+    .eq("placement", target.placement)
     .order("position", { ascending: true });
   if (!links) return { error: "Could not load links." };
   const index = links.findIndex((link) => link.id === linkId);

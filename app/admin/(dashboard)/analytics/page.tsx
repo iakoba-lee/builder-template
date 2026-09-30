@@ -1,10 +1,52 @@
 import { getPrimaryClient, requireUser } from "@/lib/data";
-import { markForUrl } from "@/lib/link-mark";
+import { socialPlatformForUrl } from "@/lib/social";
+import { AnalyticsClicks, type ClicksRange } from "./analytics-clicks";
+import { AnalyticsLinks } from "./analytics-links";
+import { AnalyticsSocials } from "./analytics-socials";
 
 function startOfToday() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return today.toISOString();
+  return today;
+}
+
+function toDayKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function eachDayKeys(start: Date, end: Date): string[] {
+  const days: string[] = [];
+  const cursor = new Date(start);
+  cursor.setHours(0, 0, 0, 0);
+  const last = new Date(end);
+  last.setHours(0, 0, 0, 0);
+  while (cursor <= last) {
+    days.push(toDayKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+function seriesFromDays(
+  dayKeys: string[],
+  countsByDay: Map<string, number>,
+): { day: string; count: number }[] {
+  return dayKeys.map((day) => ({
+    day,
+    count: countsByDay.get(day) ?? 0,
+  }));
+}
+
+function sumSeries(series: { day: string; count: number }[]) {
+  return series.reduce((sum, point) => sum + point.count, 0);
+}
+
+function domainOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
 }
 
 export default async function AnalyticsPage() {
@@ -20,13 +62,11 @@ export default async function AnalyticsPage() {
     );
   }
 
-  const todayStart = startOfToday();
-  const weekAgoDate = new Date();
-  weekAgoDate.setDate(weekAgoDate.getDate() - 7);
-  const weekAgo = weekAgoDate.toISOString();
+  const today = startOfToday();
+  const todayStart = today.toISOString();
   const accent = loaded.theme?.color ?? "#2F6BFF";
 
-  const [{ count: todayCount }, { count: allCount }, { data: weekRows }, { data: linkClicks }] =
+  const [{ count: todayCount }, { count: allCount }, { data: linkClicks }] =
     await Promise.all([
       supabase
         .from("click_events")
@@ -39,122 +79,142 @@ export default async function AnalyticsPage() {
         .eq("client_id", loaded.client.id),
       supabase
         .from("click_events")
-        .select("created_at")
-        .eq("client_id", loaded.client.id)
-        .gte("created_at", weekAgo),
-      supabase
-        .from("click_events")
         .select("link_id, created_at")
         .eq("client_id", loaded.client.id),
     ]);
 
-  const byDay = new Map<string, number>();
-  for (let i = 6; i >= 0; i -= 1) {
-    const day = new Date();
-    day.setDate(day.getDate() - i);
-    byDay.set(day.toISOString().slice(0, 10), 0);
-  }
-  for (const row of weekRows ?? []) {
-    const key = row.created_at.slice(0, 10);
-    if (byDay.has(key)) {
-      byDay.set(key, (byDay.get(key) ?? 0) + 1);
-    }
-  }
-  const series = [...byDay.entries()];
-  const max = Math.max(1, ...series.map(([, value]) => value));
-
+  const countsByDay = new Map<string, number>();
   const todayByLink = new Map<string, number>();
   const allByLink = new Map<string, number>();
+  const dayKeys30: string[] = eachDayKeys(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29),
+    today,
+  );
+  const seriesByLink = new Map<string, Map<string, number>>();
+  let earliestDay: string | null = null;
+
   for (const row of linkClicks ?? []) {
     allByLink.set(row.link_id, (allByLink.get(row.link_id) ?? 0) + 1);
     if (row.created_at >= todayStart) {
       todayByLink.set(row.link_id, (todayByLink.get(row.link_id) ?? 0) + 1);
     }
+
+    const day = row.created_at.slice(0, 10);
+    countsByDay.set(day, (countsByDay.get(day) ?? 0) + 1);
+    if (!earliestDay || day < earliestDay) earliestDay = day;
+
+    if (dayKeys30.includes(day)) {
+      let byDayForLink = seriesByLink.get(row.link_id);
+      if (!byDayForLink) {
+        byDayForLink = new Map();
+        seriesByLink.set(row.link_id, byDayForLink);
+      }
+      byDayForLink.set(day, (byDayForLink.get(day) ?? 0) + 1);
+    }
   }
 
-  const width = 640;
-  const height = 180;
-  const points = series.map(([, value], index) => {
-    const x = (index / Math.max(1, series.length - 1)) * (width - 24) + 12;
-    const y = height - 20 - (value / max) * (height - 40);
-    return `${x},${y}`;
-  });
+  function seriesForLink(linkId: string) {
+    const byDayForLink = seriesByLink.get(linkId);
+    return dayKeys30.map((day) => ({
+      day,
+      count: byDayForLink?.get(day) ?? 0,
+    }));
+  }
+
+  const weekStart = new Date(today);
+  weekStart.setDate(weekStart.getDate() - 6);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const allStart = earliestDay
+    ? new Date(`${earliestDay}T00:00:00`)
+    : weekStart;
+
+  const weekSeries = seriesFromDays(eachDayKeys(weekStart, today), countsByDay);
+  const monthSeries = seriesFromDays(eachDayKeys(monthStart, today), countsByDay);
+  const allSeries = seriesFromDays(eachDayKeys(allStart, today), countsByDay);
+
+  const ranges: ClicksRange[] = [
+    {
+      key: "7d",
+      label: "Last 7 days",
+      total: sumSeries(weekSeries),
+      series: weekSeries,
+    },
+    {
+      key: "month",
+      label: "This month",
+      total: sumSeries(monthSeries),
+      series: monthSeries,
+    },
+    {
+      key: "all",
+      label: "All time",
+      total: allCount ?? sumSeries(allSeries),
+      series: allSeries,
+    },
+  ];
+
+  const totalClicks = allCount ?? 0;
+  const socialItems: {
+    id: string;
+    title: string;
+    platform: ReturnType<typeof socialPlatformForUrl>;
+    url: string;
+    clicks: number;
+    today: number;
+    series: { day: string; count: number }[];
+  }[] = [];
+  const linkItems: {
+    id: string;
+    title: string;
+    url: string;
+    domain: string;
+    redirectPath: string;
+    clicks: number;
+    today: number;
+    share: number;
+    series: { day: string; count: number }[];
+  }[] = [];
+
+  for (const link of loaded.links) {
+    const clicks = allByLink.get(link.id) ?? 0;
+    const todayClicks = todayByLink.get(link.id) ?? 0;
+
+    if (link.placement === "profile") {
+      socialItems.push({
+        id: link.id,
+        title: link.title,
+        platform: socialPlatformForUrl(link.url),
+        url: link.url,
+        clicks,
+        today: todayClicks,
+        series: seriesForLink(link.id),
+      });
+      continue;
+    }
+
+    linkItems.push({
+      id: link.id,
+      title: link.title,
+      url: link.url,
+      domain: domainOf(link.url),
+      redirectPath: `/l/${link.id}`,
+      clicks,
+      today: todayClicks,
+      share: totalClicks > 0 ? Math.round((clicks / totalClicks) * 100) : 0,
+      series: seriesForLink(link.id),
+    });
+  }
 
   return (
     <main className="px-8 py-8">
       <h1 className="text-3xl font-bold text-[#2f6bff]">Analytics</h1>
-      <section className="mt-6 rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold">Clicks</h2>
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <div className="rounded-lg border border-black/5 p-4">
-            <p className="text-sm text-neutral-500">Today</p>
-            <p className="text-4xl font-semibold text-[#2f6bff]">
-              {todayCount ?? 0}
-            </p>
-          </div>
-          <div className="rounded-lg border border-black/5 p-4">
-            <p className="text-sm text-neutral-500">All Time</p>
-            <p className="text-4xl font-semibold text-[#2f6bff]">
-              {allCount ?? 0}
-            </p>
-          </div>
-        </div>
-        <svg viewBox={`0 0 ${width} ${height}`} className="mt-6 w-full">
-          <polyline
-            fill="none"
-            stroke={accent}
-            strokeWidth="3"
-            points={points.join(" ")}
-          />
-          {series.map(([day], index) => {
-            const x =
-              (index / Math.max(1, series.length - 1)) * (width - 24) + 12;
-            return (
-              <text
-                key={day}
-                x={x}
-                y={height - 4}
-                textAnchor="middle"
-                fontSize="10"
-                fill="#6b7280"
-              >
-                {day.slice(5)}
-              </text>
-            );
-          })}
-        </svg>
-      </section>
-      <section className="mt-6 rounded-xl bg-white p-6 shadow-sm">
-        <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-wide text-neutral-400">
-          <h2 className="text-xl font-semibold normal-case text-black">Links</h2>
-          <span>Today / All time</span>
-        </div>
-        <ul className="flex flex-col">
-          {loaded.links.map((link) => {
-            const mark = markForUrl(link.url, accent);
-            return (
-              <li
-                key={link.id}
-                className="flex items-center gap-3 border-b border-black/5 py-3 last:border-0"
-              >
-                <span
-                  className="flex h-9 w-9 items-center justify-center rounded-md text-white"
-                  style={{ background: mark.background }}
-                >
-                  ↗
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{link.title}</p>
-                  <p className="truncate text-xs text-neutral-500">{link.url}</p>
-                </div>
-                <p className="text-sm text-neutral-400">
-                  {todayByLink.get(link.id) ?? 0} / {allByLink.get(link.id) ?? 0}
-                </p>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+      <AnalyticsClicks
+        todayCount={todayCount ?? 0}
+        ranges={ranges}
+        accent={accent}
+      />
+      <AnalyticsSocials socials={socialItems} accent={accent} />
+      <AnalyticsLinks links={linkItems} accent={accent} />
     </main>
   );
 }

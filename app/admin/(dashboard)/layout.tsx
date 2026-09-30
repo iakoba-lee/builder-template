@@ -12,12 +12,14 @@ export default async function DashboardLayout({
 
   const loaded = await getPrimaryClient(supabase);
   const slug = loaded?.client.slug ?? "page";
+  const clientName = loaded?.client.name ?? slug;
+  const avatarUrl = loaded?.client.avatar_url ?? null;
 
   return (
     <div className="min-h-full bg-[#eef1f6] text-[#171717]">
       <header className="h-12 bg-[#111]" />
       <div className="flex min-h-[calc(100vh-3rem)]">
-        <AdminNav slug={slug} />
+        <AdminNav slug={slug} clientName={clientName} avatarUrl={avatarUrl} />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>

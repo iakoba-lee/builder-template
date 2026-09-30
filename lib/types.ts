@@ -20,4 +20,5 @@ export type LinkRow = {
   title: string;
   url: string;
   position: number;
+  placement: "page" | "profile";
 };

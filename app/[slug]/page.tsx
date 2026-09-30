@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { SocialGlyph } from "@/components/social-glyph";
 import { createClient } from "@/lib/supabase/server";
 import { fontStack } from "@/lib/display";
 import { markForUrl } from "@/lib/link-mark";
+import { socialPlatformForUrl } from "@/lib/social";
 import type { Client, LinkRow, ThemeSettings } from "@/lib/types";
 
 async function getClientBySlug(slug: string) {
@@ -87,8 +89,10 @@ function PublicLinkPage({
   links: LinkRow[];
 }) {
   const accent = theme?.color ?? "#2F6BFF";
-  const featured = links[0];
-  const rest = links.slice(1);
+  const socials = links.filter((link) => link.placement === "profile");
+  const content = links.filter((link) => link.placement !== "profile");
+  const featured = content[0];
+  const rest = content.slice(1);
 
   return (
     <div
@@ -113,6 +117,25 @@ function PublicLinkPage({
             <p className="mt-2 whitespace-pre-line text-sm text-white/70">
               {client.bio}
             </p>
+          ) : null}
+          {socials.length > 0 ? (
+            <ul className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              {socials.map((link) => {
+                const platform = socialPlatformForUrl(link.url);
+                return (
+                  <li key={link.id}>
+                    <a
+                      href={`/l/${link.id}`}
+                      aria-label={link.title}
+                      className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white transition hover:scale-105"
+                      style={{ color: accent }}
+                    >
+                      <SocialGlyph platform={platform} />
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
           ) : null}
         </section>
         <div className="mt-6 flex flex-col gap-3">
