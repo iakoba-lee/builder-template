@@ -176,9 +176,8 @@ function PublicLinkRow({
       >
         ↗
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{link.title}</span>
-        <span className="block truncate text-xs text-white/45">{link.url}</span>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">
+        {link.title}
       </span>
       <span className="text-white/40">→</span>
     </a>
