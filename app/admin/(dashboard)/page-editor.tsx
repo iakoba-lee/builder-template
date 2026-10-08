@@ -6,6 +6,7 @@ import {
   addLink,
   deleteLink,
   moveLink,
+  reorderLinks,
   updateLink,
   updateProfile,
   updateTheme,
@@ -134,7 +135,9 @@ export function PageEditor({
               onAdd={(formData) => run(addLink, formData, "Link added.")}
               onUpdate={(formData) => run(updateLink, formData, "Link saved.")}
               onDelete={(formData) => run(deleteLink, formData, "Link deleted.")}
-              onMove={(formData) => run(moveLink, formData, "Order updated.")}
+              onReorder={(formData) =>
+                run(reorderLinks, formData, "Order saved.")
+              }
             />
           )}
           {tab === "appearance" && (
@@ -579,7 +582,7 @@ function LinksForm({
   onAdd,
   onUpdate,
   onDelete,
-  onMove,
+  onReorder,
 }: {
   clientId: string;
   links: LinkRow[];
@@ -589,13 +592,42 @@ function LinksForm({
   onAdd: (formData: FormData) => void;
   onUpdate: (formData: FormData) => void;
   onDelete: (formData: FormData) => void;
-  onMove: (formData: FormData) => void;
+  onReorder: (formData: FormData) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [orderedLinks, setOrderedLinks] = useState(links);
+  const [orderDirty, setOrderDirty] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const linksSignature = links
+    .map((link) => `${link.id}:${link.title}:${link.url}:${link.position}`)
+    .join("|");
+  const [syncedSignature, setSyncedSignature] = useState(linksSignature);
+
+  if (linksSignature !== syncedSignature) {
+    setSyncedSignature(linksSignature);
+    if (!orderDirty) {
+      setOrderedLinks(links);
+    } else {
+      const byId = new Map(links.map((link) => [link.id, link]));
+      const prevIds = new Set(orderedLinks.map((link) => link.id));
+      const kept = orderedLinks
+        .filter((link) => byId.has(link.id))
+        .map((link) => byId.get(link.id)!);
+      const added = links.filter((link) => !prevIds.has(link.id));
+      const merged = [...added, ...kept];
+      setOrderedLinks(merged);
+      const same =
+        links.length === merged.length &&
+        links.every((link, index) => link.id === merged[index]?.id);
+      if (same) setOrderDirty(false);
+    }
+  }
+
+  const displayLinks = editing || orderDirty ? orderedLinks : links;
 
   function resetAdd() {
     setTitle("");
@@ -603,13 +635,54 @@ function LinksForm({
     setAdding(false);
   }
 
-  function stopEditing() {
+  function startEditing() {
+    setOrderedLinks(links);
+    setOrderDirty(false);
+    setEditing(true);
+  }
+
+  function finishEditing() {
+    if (orderDirty) {
+      const data = new FormData();
+      data.set("clientId", clientId);
+      data.set("placement", "page");
+      data.set(
+        "orderedIds",
+        orderedLinks.map((link) => link.id).join(","),
+      );
+      onReorder(data);
+    }
     setEditing(false);
     resetAdd();
+    setDragIndex(null);
+  }
+
+  function moveLocal(index: number, direction: "up" | "down") {
+    const swapWith = direction === "up" ? index - 1 : index + 1;
+    if (swapWith < 0 || swapWith >= orderedLinks.length) return;
+    setOrderedLinks((prev) => {
+      const next = [...prev];
+      const temp = next[index];
+      next[index] = next[swapWith];
+      next[swapWith] = temp;
+      return next;
+    });
+    setOrderDirty(true);
+  }
+
+  function moveToIndex(from: number, to: number) {
+    if (from === to || from < 0 || to < 0 || to >= orderedLinks.length) return;
+    setOrderedLinks((prev) => {
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+    setOrderDirty(true);
   }
 
   const selected = selectedId
-    ? (links.find((link) => link.id === selectedId) ?? null)
+    ? (displayLinks.find((link) => link.id === selectedId) ?? null)
     : null;
   const selectedStats = selected
     ? (linkStats[selected.id] ?? EMPTY_STATS)
@@ -620,12 +693,12 @@ function LinksForm({
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-neutral-500">
           {editing
-            ? "Reorder, edit, or remove links."
+            ? "Reorder, edit, or remove links. Order saves when you click Done."
             : "Click Edit to reorder or change links."}
         </p>
         <button
           type="button"
-          onClick={() => (editing ? stopEditing() : setEditing(true))}
+          onClick={() => (editing ? finishEditing() : startEditing())}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
             editing
               ? "bg-neutral-900 text-white hover:bg-neutral-800"
@@ -634,32 +707,6 @@ function LinksForm({
         >
           {editing ? "Done" : "Edit"}
         </button>
-      </div>
-
-      <div className="overflow-hidden rounded-2xl border border-black/8 bg-white">
-        <ul className="divide-y divide-black/5">
-          {links.map((link, index) => (
-            <LinkRowEditor
-              key={link.id}
-              clientId={clientId}
-              link={link}
-              accent={accent}
-              pending={pending}
-              editing={editing}
-              isFirst={index === 0}
-              isLast={index === links.length - 1}
-              onUpdate={onUpdate}
-              onDelete={onDelete}
-              onMove={onMove}
-              onOpenTrend={() => setSelectedId(link.id)}
-            />
-          ))}
-          {links.length === 0 ? (
-            <li className="px-5 py-8 text-center text-sm text-neutral-500">
-              No links yet. Click Edit to add one.
-            </li>
-          ) : null}
-        </ul>
       </div>
 
       {editing ? (
@@ -728,6 +775,41 @@ function LinksForm({
         )
       ) : null}
 
+      <div className="overflow-hidden rounded-2xl border border-black/8 bg-white">
+        <ul className="divide-y divide-black/5">
+          {displayLinks.map((link, index) => (
+            <LinkRowEditor
+              key={link.id}
+              clientId={clientId}
+              link={link}
+              accent={accent}
+              pending={pending}
+              editing={editing}
+              isFirst={index === 0}
+              isLast={index === displayLinks.length - 1}
+              dragging={dragIndex === index}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              onMoveUp={() => moveLocal(index, "up")}
+              onMoveDown={() => moveLocal(index, "down")}
+              onDragStart={() => setDragIndex(index)}
+              onDragOver={() => {
+                if (dragIndex === null || dragIndex === index) return;
+                moveToIndex(dragIndex, index);
+                setDragIndex(index);
+              }}
+              onDragEnd={() => setDragIndex(null)}
+              onOpenTrend={() => setSelectedId(link.id)}
+            />
+          ))}
+          {displayLinks.length === 0 ? (
+            <li className="px-5 py-8 text-center text-sm text-neutral-500">
+              No links yet. Click Edit to add one.
+            </li>
+          ) : null}
+        </ul>
+      </div>
+
       {selected && selectedStats ? (
         <ClickTrendModal
           id={selected.id}
@@ -761,9 +843,14 @@ function LinkRowEditor({
   editing,
   isFirst,
   isLast,
+  dragging,
   onUpdate,
   onDelete,
-  onMove,
+  onMoveUp,
+  onMoveDown,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
   onOpenTrend,
 }: {
   clientId: string;
@@ -773,9 +860,14 @@ function LinkRowEditor({
   editing: boolean;
   isFirst: boolean;
   isLast: boolean;
+  dragging: boolean;
   onUpdate: (formData: FormData) => void;
   onDelete: (formData: FormData) => void;
-  onMove: (formData: FormData) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDragStart: () => void;
+  onDragOver: () => void;
+  onDragEnd: () => void;
   onOpenTrend: () => void;
 }) {
   const [title, setTitle] = useState(link.title);
@@ -798,25 +890,46 @@ function LinkRowEditor({
   }
 
   return (
-    <li className="flex items-center gap-3 px-3 py-3 sm:px-4">
+    <li
+      className={`flex items-center gap-3 px-3 py-3 sm:px-4 ${
+        dragging ? "bg-[#2f6bff]/5 opacity-80" : ""
+      }`}
+      onDragOver={(event) => {
+        if (!editing) return;
+        event.preventDefault();
+        onDragOver();
+      }}
+    >
       {editing ? (
         <div className="flex shrink-0 flex-col items-center gap-0.5 text-neutral-300">
           <button
             type="button"
-            disabled={pending || isFirst}
-            onClick={() => onMove(formData(clientId, link.id, "up"))}
+            disabled={isFirst}
+            onClick={onMoveUp}
             className="rounded p-0.5 hover:bg-neutral-100 hover:text-neutral-600 disabled:opacity-20"
             aria-label={`Move ${link.title} up`}
           >
             <ChevronIcon direction="up" />
           </button>
-          <span className="px-1" aria-hidden>
+          <span
+            role="button"
+            tabIndex={0}
+            draggable
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", link.id);
+              onDragStart();
+            }}
+            onDragEnd={onDragEnd}
+            className="cursor-grab select-none rounded px-1 py-0.5 hover:bg-neutral-100 hover:text-neutral-600 active:cursor-grabbing"
+            aria-label={`Drag to reorder ${link.title}`}
+          >
             <GripIcon />
           </span>
           <button
             type="button"
-            disabled={pending || isLast}
-            onClick={() => onMove(formData(clientId, link.id, "down"))}
+            disabled={isLast}
+            onClick={onMoveDown}
             className="rounded p-0.5 hover:bg-neutral-100 hover:text-neutral-600 disabled:opacity-20"
             aria-label={`Move ${link.title} down`}
           >

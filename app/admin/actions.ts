@@ -70,12 +70,13 @@ export async function addLink(formData: FormData) {
     return { error: "Title and URL are required." };
   }
   const { supabase, client } = await requireOwnedClient(clientId);
-  const { data: last } = await supabase
+  // Prepend: sit above existing links when sorted by position ascending.
+  const { data: first } = await supabase
     .from("links")
     .select("position")
     .eq("client_id", client.id)
     .eq("placement", placement)
-    .order("position", { ascending: false })
+    .order("position", { ascending: true })
     .limit(1)
     .maybeSingle();
   const { error } = await supabase.from("links").insert({
@@ -83,7 +84,7 @@ export async function addLink(formData: FormData) {
     title,
     url,
     placement,
-    position: (last?.position ?? -1) + 1,
+    position: (first?.position ?? 0) - 1,
   });
   if (error) return { error: error.message };
   revalidatePath("/", "layout");
@@ -160,6 +161,45 @@ export async function moveLink(formData: FormData) {
     .eq("id", other.id);
   if (firstError || secondError) {
     return { error: firstError?.message ?? secondError?.message };
+  }
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** Persist a full ordered list of link ids (0..n-1). Used when leaving edit mode. */
+export async function reorderLinks(formData: FormData) {
+  const clientId = String(formData.get("clientId") ?? "");
+  const placementRaw = String(formData.get("placement") ?? "page");
+  const placement = placementRaw === "profile" ? "profile" : "page";
+  const orderedIds = String(formData.get("orderedIds") ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (orderedIds.length === 0) return { ok: true };
+
+  const { supabase, client } = await requireOwnedClient(clientId);
+  const { data: existing } = await supabase
+    .from("links")
+    .select("id")
+    .eq("client_id", client.id)
+    .eq("placement", placement);
+  if (!existing) return { error: "Could not load links." };
+
+  const owned = new Set(existing.map((link) => link.id));
+  if (
+    orderedIds.length !== owned.size ||
+    orderedIds.some((id) => !owned.has(id))
+  ) {
+    return { error: "Link order is out of date. Refresh and try again." };
+  }
+
+  for (let i = 0; i < orderedIds.length; i++) {
+    const { error } = await supabase
+      .from("links")
+      .update({ position: i })
+      .eq("id", orderedIds[i])
+      .eq("client_id", client.id);
+    if (error) return { error: error.message };
   }
   revalidatePath("/", "layout");
   return { ok: true };
