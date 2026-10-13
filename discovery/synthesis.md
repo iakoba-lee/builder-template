@@ -21,6 +21,19 @@ brand's agency rep, not the brand itself, so it is not counted either.
 working relationship with us. Only three conversations were recorded, so every exact quote below
 comes from Creators C, D, and J.
 
+### Supporting material (not interviews)
+
+- **[Customer avatars](customer-avatars.md)** (written Oct 1, before most of these interviews).
+  These sort creators into tiers by monthly brand-deal revenue, not followers: Emerging ($0–5K,
+  e.g. Kimball AI), Breakout ($5–15K, e.g. Ben Kimball AI), and Established ($15K+, e.g. Custom
+  Adventurist at ~1.38M followers and ~$20K a month). The two kinds of creator below map onto
+  them. Emerging creators don't know the steps. Breakout and Established creators are buried in
+  admin and unsure of their rates.
+- **[Custom Adventurist inbox audit](data/ca-inbox/README.md)** covers every sponsorship thread
+  from Jun 1 to Sep 26, 2026. It puts numbers on finding 2. Of 1,349 opportunities, 1,329 came
+  from brands reaching out. 135 never got a reply, 101 of them paid sponsorships. Open
+  follow-ups grew from under 5 a week to 46–48 a week. The median agreed deal was $1,300.
+
 ## The main finding: there are two kinds of creator with different problems
 
 ### 1. Creators who have never had a deal: they don't know the steps, so they don't start
@@ -48,6 +61,8 @@ My partner and Creator D.
   they were undercharging, by about three to five times, when an agency told them.
 - A helper with limited time doesn't last. My partner's spouse fixed the problem until she got
   busy.
+- The inbox audit backs this up: 135 Custom Adventurist opportunities never got a reply
+  ([data](data/ca-inbox/README.md)).
 
 ## Pains, ranked by how many people raised them
 

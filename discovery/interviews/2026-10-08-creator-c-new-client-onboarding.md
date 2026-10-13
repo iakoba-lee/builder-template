@@ -16,6 +16,28 @@ We set up delegated access to his Gmail, connected our inbox tool, shared a Noti
 and dashboard, and explained the 20% rate (30% on deals we refer) and the deal stages. He asked
 questions as we went.
 
+Details from my call notes in the vault:
+
+- **Money flow:** the agency accepts brand payments, takes its cut, and sends him the rest. We
+  only get paid when he does. A management agreement makes the roles clear to brands and gives
+  me authority to sign brand contracts for him.
+- **Deal process we walked him through:** I reply to brand emails, check fit, and negotiate.
+  Deals close to done go to him for a yes or no. After that: contract → brief → script → he
+  films and edits → I send it to the brand → feedback → post date. All of it is tracked in
+  Notion, so he doesn't need to open the inbox.
+- **Products:** he gives me a shipping address, I pass it to brands, and he tells me when
+  products arrive.
+- **Content advice we gave:** use the same name and photo on every platform, cross-post every
+  TikTok to Instagram and YouTube, and stay in tech so brands fit (Anker chargers yes, makeup
+  no). My partner said deals dried up on his own second channel when posting slipped.
+- **Payouts:** bank transfer rather than Payoneer, which is slower and takes a fee. We didn't
+  collect banking details on the call.
+- **His own knowledge:** he knows his audience gets home around 2pm, which is a good time to post.
+  He makes TikToks over a minute long so they qualify for TikTok's creator pay.
+- **Follow-ups:** send the agreement, finish his dashboard, start replying to the brands already
+  in his inbox, get his 28-day TikTok analytics and best videos, confirm his legal name and bank
+  details, and check in again in about a week about which brands he wants.
+
 ## What they actually do today
 
 - Tech creator with under 20k followers. TikTok is his main account; his YouTube channel has
@@ -43,7 +65,7 @@ questions as we went.
 |---|---|---|
 | Nothing for sponsorships | — | Never started |
 | Accepting free products | Yes | Products, not paid deals |
-
+| TikTok creator pay (videos over a minute) and TikTok Live gifts | Yes | TikTok keeps a large share of gifts |
 ## Their words
 
 - "Like mine is really small at my My channel is really small. What do you think they're paying?"
