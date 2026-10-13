@@ -23,3 +23,15 @@ internal process audit is done; interviews expand it.
   people have tried, and the language they use to describe their problems.
 
 **Predicted difficulty:** 3
+
+**Actual difficulty:** 2
+
+**Why it differed:** The interviews themselves were easier than expected; the hard part was
+scheduling them, and three of them now land the week after the sprint.
+
+**Retro:** I hit the goal: we interviewed creators, clients, and a brand and got critical
+information, written up in `discovery/synthesis.md`. The sprint started out very differently
+than planned because my clients needed design fixes, which is why the first week was mostly work
+outside the plan. Client work took priority and pushed the interviews back. We also signed
+another client this week. Next sprint I'll keep doing discovery interviews, starting with the
+three already scheduled.
