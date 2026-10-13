@@ -97,3 +97,10 @@ about this repo. A rule is worth writing only if it would change what a future s
    `origin` is my fork.
 2. [CODE] Both `npm run lint` and `npm run build` must pass before a push — lint alone does not
    type-check.
+3. [DATA] Never merge "Ben Kimball AI" and "Kimball AI" when anonymizing, summarizing, or
+   tagging data — they are two different clients: Ben Kimball AI is run by my partner, and
+   Kimball AI was the agency's first outside client. Transcripts misspell both ("Kimble AI",
+   "Bencubal AI"), so map each mention from context.
+4. [DATA] Count onboarding and working calls with clients as discovery interviews when they show
+   the client's own pains, and know who is outside the agency — Kimball AI and every client signed
+   since are outside clients; only Custom Adventurist and Ben Kimball AI belong to my partner.
