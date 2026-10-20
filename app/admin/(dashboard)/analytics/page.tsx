@@ -1,3 +1,4 @@
+import { loadClickAggregates } from "@/lib/click-counts";
 import { getPrimaryClient, requireUser } from "@/lib/data";
 import { socialPlatformForUrl } from "@/lib/social";
 import { AnalyticsClicks, type ClicksRange } from "./analytics-clicks";
@@ -66,55 +67,23 @@ export default async function AnalyticsPage() {
   const todayStart = today.toISOString();
   const accent = loaded.theme?.color ?? "#2F6BFF";
 
-  const [{ count: todayCount }, { count: allCount }, { data: linkClicks }] =
-    await Promise.all([
-      supabase
-        .from("click_events")
-        .select("*", { count: "exact", head: true })
-        .eq("client_id", loaded.client.id)
-        .gte("created_at", todayStart),
-      supabase
-        .from("click_events")
-        .select("*", { count: "exact", head: true })
-        .eq("client_id", loaded.client.id),
-      supabase
-        .from("click_events")
-        .select("link_id, created_at")
-        .eq("client_id", loaded.client.id),
-    ]);
-
-  const countsByDay = new Map<string, number>();
-  const todayByLink = new Map<string, number>();
-  const allByLink = new Map<string, number>();
+  const clicks = await loadClickAggregates(
+    supabase,
+    loaded.client.id,
+    todayStart,
+  );
+  const countsByDay = clicks.byDay;
   const dayKeys30: string[] = eachDayKeys(
     new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29),
     today,
   );
-  const seriesByLink = new Map<string, Map<string, number>>();
   let earliestDay: string | null = null;
-
-  for (const row of linkClicks ?? []) {
-    allByLink.set(row.link_id, (allByLink.get(row.link_id) ?? 0) + 1);
-    if (row.created_at >= todayStart) {
-      todayByLink.set(row.link_id, (todayByLink.get(row.link_id) ?? 0) + 1);
-    }
-
-    const day = row.created_at.slice(0, 10);
-    countsByDay.set(day, (countsByDay.get(day) ?? 0) + 1);
+  for (const day of countsByDay.keys()) {
     if (!earliestDay || day < earliestDay) earliestDay = day;
-
-    if (dayKeys30.includes(day)) {
-      let byDayForLink = seriesByLink.get(row.link_id);
-      if (!byDayForLink) {
-        byDayForLink = new Map();
-        seriesByLink.set(row.link_id, byDayForLink);
-      }
-      byDayForLink.set(day, (byDayForLink.get(day) ?? 0) + 1);
-    }
   }
 
   function seriesForLink(linkId: string) {
-    const byDayForLink = seriesByLink.get(linkId);
+    const byDayForLink = clicks.byLink.get(linkId)?.byDay;
     return dayKeys30.map((day) => ({
       day,
       count: byDayForLink?.get(day) ?? 0,
@@ -148,12 +117,12 @@ export default async function AnalyticsPage() {
     {
       key: "all",
       label: "All time",
-      total: allCount ?? sumSeries(allSeries),
+      total: clicks.total,
       series: allSeries,
     },
   ];
 
-  const totalClicks = allCount ?? 0;
+  const totalClicks = clicks.total;
   const socialItems: {
     id: string;
     title: string;
@@ -176,8 +145,9 @@ export default async function AnalyticsPage() {
   }[] = [];
 
   for (const link of loaded.links) {
-    const clicks = allByLink.get(link.id) ?? 0;
-    const todayClicks = todayByLink.get(link.id) ?? 0;
+    const linkClicks = clicks.byLink.get(link.id);
+    const linkTotal = linkClicks?.total ?? 0;
+    const todayClicks = linkClicks?.today ?? 0;
 
     if (link.placement === "profile") {
       socialItems.push({
@@ -185,7 +155,7 @@ export default async function AnalyticsPage() {
         title: link.title,
         platform: socialPlatformForUrl(link.url),
         url: link.url,
-        clicks,
+        clicks: linkTotal,
         today: todayClicks,
         series: seriesForLink(link.id),
       });
@@ -198,9 +168,9 @@ export default async function AnalyticsPage() {
       url: link.url,
       domain: domainOf(link.url),
       redirectPath: `/l/${link.id}`,
-      clicks,
+      clicks: linkTotal,
       today: todayClicks,
-      share: totalClicks > 0 ? Math.round((clicks / totalClicks) * 100) : 0,
+      share: totalClicks > 0 ? Math.round((linkTotal / totalClicks) * 100) : 0,
       series: seriesForLink(link.id),
     });
   }
@@ -209,7 +179,7 @@ export default async function AnalyticsPage() {
     <main className="px-8 py-8">
       <h1 className="text-3xl font-bold text-[#2f6bff]">Analytics</h1>
       <AnalyticsClicks
-        todayCount={todayCount ?? 0}
+        todayCount={clicks.today}
         ranges={ranges}
         accent={accent}
       />

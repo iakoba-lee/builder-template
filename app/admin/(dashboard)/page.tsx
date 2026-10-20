@@ -1,3 +1,4 @@
+import { loadClickAggregates } from "@/lib/click-counts";
 import { getPrimaryClient, requireUser } from "@/lib/data";
 import { PageEditor, type LinkClickStats } from "./page-editor";
 
@@ -36,42 +37,22 @@ export default async function MyPage() {
     new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29),
     today,
   );
-  const dayKeySet = new Set(dayKeys);
-
-  const { data: clickRows } = await supabase
-    .from("click_events")
-    .select("link_id, created_at")
-    .eq("client_id", loaded.client.id);
-
-  const allByLink = new Map<string, number>();
-  const todayByLink = new Map<string, number>();
-  const seriesByLink = new Map<string, Map<string, number>>();
-  let totalClicks = 0;
-
-  for (const row of clickRows ?? []) {
-    totalClicks += 1;
-    allByLink.set(row.link_id, (allByLink.get(row.link_id) ?? 0) + 1);
-    if (row.created_at >= todayStart) {
-      todayByLink.set(row.link_id, (todayByLink.get(row.link_id) ?? 0) + 1);
-    }
-    const day = row.created_at.slice(0, 10);
-    if (!dayKeySet.has(day)) continue;
-    let byDay = seriesByLink.get(row.link_id);
-    if (!byDay) {
-      byDay = new Map();
-      seriesByLink.set(row.link_id, byDay);
-    }
-    byDay.set(day, (byDay.get(day) ?? 0) + 1);
-  }
+  const clicks = await loadClickAggregates(
+    supabase,
+    loaded.client.id,
+    todayStart,
+  );
 
   const linkStats: Record<string, LinkClickStats> = {};
   for (const link of loaded.links) {
-    const clicks = allByLink.get(link.id) ?? 0;
-    const byDay = seriesByLink.get(link.id);
+    const linkClicks = clicks.byLink.get(link.id);
+    const linkTotal = linkClicks?.total ?? 0;
+    const byDay = linkClicks?.byDay;
     linkStats[link.id] = {
-      clicks,
-      today: todayByLink.get(link.id) ?? 0,
-      share: totalClicks > 0 ? Math.round((clicks / totalClicks) * 100) : 0,
+      clicks: linkTotal,
+      today: linkClicks?.today ?? 0,
+      share:
+        clicks.total > 0 ? Math.round((linkTotal / clicks.total) * 100) : 0,
       series: dayKeys.map((day) => ({
         day,
         count: byDay?.get(day) ?? 0,
