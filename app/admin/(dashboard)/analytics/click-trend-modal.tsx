@@ -68,8 +68,9 @@ export function ClickTrendModal({
     const y = topPad + plotHeight - (point.count / chartMax) * plotHeight;
     return `${x},${y}`;
   });
+  const labelEvery = Math.max(1, Math.ceil(series.length / 6));
   const xLabels = series.filter(
-    (_, index) => index % 5 === 0 || index === series.length - 1,
+    (_, index) => index % labelEvery === 0 || index === series.length - 1,
   );
 
   return (
@@ -133,7 +134,7 @@ export function ClickTrendModal({
           viewBox={`0 0 ${width} ${height}`}
           className="mt-5 w-full"
           role="img"
-          aria-label={`Clicks for ${title} over the last 30 days`}
+          aria-label={subtitle}
         >
           {ticks.map((tick) => {
             const y = topPad + plotHeight - (tick / chartMax) * plotHeight;

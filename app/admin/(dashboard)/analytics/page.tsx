@@ -1,5 +1,6 @@
 import { loadClickAggregates } from "@/lib/click-counts";
 import { getPrimaryClient, requireUser } from "@/lib/data";
+import { formatAgencyDay, isLiveLink, onPageRange } from "@/lib/link-schedule";
 import { socialPlatformForUrl } from "@/lib/social";
 import { AnalyticsClicks, type ClicksRange } from "./analytics-clicks";
 import { AnalyticsLinks } from "./analytics-links";
@@ -82,12 +83,16 @@ export default async function AnalyticsPage() {
     if (!earliestDay || day < earliestDay) earliestDay = day;
   }
 
-  function seriesForLink(linkId: string) {
+  function seriesForDays(linkId: string, days: string[]) {
     const byDayForLink = clicks.byLink.get(linkId)?.byDay;
-    return dayKeys30.map((day) => ({
+    return days.map((day) => ({
       day,
       count: byDayForLink?.get(day) ?? 0,
     }));
+  }
+
+  function seriesForLink(linkId: string) {
+    return seriesForDays(linkId, dayKeys30);
   }
 
   const weekStart = new Date(today);
@@ -132,6 +137,18 @@ export default async function AnalyticsPage() {
     today: number;
     series: { day: string; count: number }[];
   }[] = [];
+  const archivedItems: {
+    id: string;
+    title: string;
+    url: string;
+    domain: string;
+    redirectPath: string;
+    clicks: number;
+    today: number;
+    share: number;
+    series: { day: string; count: number }[];
+    trendSubtitle: string;
+  }[] = [];
   const linkItems: {
     id: string;
     title: string;
@@ -149,6 +166,31 @@ export default async function AnalyticsPage() {
     const linkTotal = linkClicks?.total ?? 0;
     const todayClicks = linkClicks?.today ?? 0;
 
+    const item = {
+      id: link.id,
+      title: link.title,
+      url: link.url,
+      domain: domainOf(link.url),
+      redirectPath: `/l/${link.id}`,
+      clicks: linkTotal,
+      today: todayClicks,
+      share: totalClicks > 0 ? Math.round((linkTotal / totalClicks) * 100) : 0,
+      series: seriesForLink(link.id),
+    };
+
+    if (link.placement !== "profile" && !isLiveLink(link)) {
+      const range = onPageRange(link, today);
+      const start = formatAgencyDay(range.start.toISOString());
+      const end = formatAgencyDay(range.end.toISOString());
+      const span = start === end ? start : `${start} – ${end}`;
+      archivedItems.push({
+        ...item,
+        series: seriesForDays(link.id, eachDayKeys(range.start, range.end)),
+        trendSubtitle: `Clicks while it was on the page · ${span} · ${item.domain}`,
+      });
+      continue;
+    }
+
     if (link.placement === "profile") {
       socialItems.push({
         id: link.id,
@@ -162,17 +204,7 @@ export default async function AnalyticsPage() {
       continue;
     }
 
-    linkItems.push({
-      id: link.id,
-      title: link.title,
-      url: link.url,
-      domain: domainOf(link.url),
-      redirectPath: `/l/${link.id}`,
-      clicks: linkTotal,
-      today: todayClicks,
-      share: totalClicks > 0 ? Math.round((linkTotal / totalClicks) * 100) : 0,
-      series: seriesForLink(link.id),
-    });
+    linkItems.push(item);
   }
 
   return (
@@ -185,6 +217,13 @@ export default async function AnalyticsPage() {
       />
       <AnalyticsSocials socials={socialItems} accent={accent} />
       <AnalyticsLinks links={linkItems} accent={accent} />
+      {archivedItems.length > 0 ? (
+        <AnalyticsLinks
+          links={archivedItems}
+          accent={accent}
+          heading="Archived"
+        />
+      ) : null}
     </main>
   );
 }

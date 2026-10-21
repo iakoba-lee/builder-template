@@ -4,6 +4,7 @@ import { SocialGlyph } from "@/components/social-glyph";
 import { createClient } from "@/lib/supabase/server";
 import { fontStack } from "@/lib/display";
 import { markForUrl } from "@/lib/link-mark";
+import { isLiveLink } from "@/lib/link-schedule";
 import { socialPlatformForUrl } from "@/lib/social";
 import type { Client, LinkRow, ThemeSettings } from "@/lib/types";
 
@@ -74,7 +75,7 @@ export default async function PublicPage({
     <PublicLinkPage
       client={client}
       theme={(theme as ThemeSettings | null) ?? null}
-      links={(links as LinkRow[]) ?? []}
+      links={((links as LinkRow[]) ?? []).filter((link) => isLiveLink(link))}
     />
   );
 }

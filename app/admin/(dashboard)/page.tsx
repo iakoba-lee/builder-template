@@ -1,5 +1,6 @@
 import { loadClickAggregates } from "@/lib/click-counts";
 import { getPrimaryClient, requireUser } from "@/lib/data";
+import { isLiveLink, onPageRange } from "@/lib/link-schedule";
 import { PageEditor, type LinkClickStats } from "./page-editor";
 
 function eachDayKeys(start: Date, end: Date): string[] {
@@ -48,12 +49,15 @@ export default async function MyPage() {
     const linkClicks = clicks.byLink.get(link.id);
     const linkTotal = linkClicks?.total ?? 0;
     const byDay = linkClicks?.byDay;
+    const archived = link.placement === "page" && !isLiveLink(link);
+    const range = archived ? onPageRange(link, today) : null;
+    const keys = range ? eachDayKeys(range.start, range.end) : dayKeys;
     linkStats[link.id] = {
       clicks: linkTotal,
       today: linkClicks?.today ?? 0,
       share:
         clicks.total > 0 ? Math.round((linkTotal / clicks.total) * 100) : 0,
-      series: dayKeys.map((day) => ({
+      series: keys.map((day) => ({
         day,
         count: byDay?.get(day) ?? 0,
       })),
@@ -64,7 +68,14 @@ export default async function MyPage() {
     <PageEditor
       client={loaded.client}
       theme={loaded.theme}
-      links={loaded.links}
+      links={loaded.links.filter((link) => isLiveLink(link))}
+      archivedLinks={loaded.links
+        .filter((link) => link.placement === "page" && !isLiveLink(link))
+        .sort((a, b) =>
+          (b.archived_at ?? b.expires_at ?? "").localeCompare(
+            a.archived_at ?? a.expires_at ?? "",
+          ),
+        )}
       linkStats={linkStats}
     />
   );

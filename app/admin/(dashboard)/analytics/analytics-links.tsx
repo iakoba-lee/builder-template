@@ -13,6 +13,7 @@ export type AnalyticsLinkItem = {
   today: number;
   share: number;
   series: { day: string; count: number }[];
+  trendSubtitle?: string;
 };
 
 type SortKey = "clicks" | "today" | "share";
@@ -26,9 +27,11 @@ const SORT_LABELS: Record<SortKey, string> = {
 export function AnalyticsLinks({
   links,
   accent,
+  heading = "Link block performance",
 }: {
   links: AnalyticsLinkItem[];
   accent: string;
+  heading?: string;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("clicks");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -54,7 +57,7 @@ export function AnalyticsLinks({
   return (
     <section className="mt-6">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">Link block performance</h2>
+        <h2 className="text-xl font-semibold">{heading}</h2>
         <button
           type="button"
           onClick={cycleSort}
@@ -119,7 +122,10 @@ export function AnalyticsLinks({
         <ClickTrendModal
           id={selected.id}
           title={selected.title}
-          subtitle={`Clicks over the last 30 days · ${selected.domain}`}
+          subtitle={
+            selected.trendSubtitle ??
+            `Clicks over the last 30 days · ${selected.domain}`
+          }
           clicks={selected.clicks}
           today={selected.today}
           share={selected.share}

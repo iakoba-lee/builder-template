@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { deviceFromUserAgent } from "@/lib/display";
+import { isLiveLink } from "@/lib/link-schedule";
 
 export async function GET(
   request: Request,
@@ -10,11 +11,11 @@ export async function GET(
   const supabase = await createClient();
   const { data: link } = await supabase
     .from("links")
-    .select("id, url, client_id")
+    .select("id, url, client_id, expires_at, archived_at")
     .eq("id", linkId)
     .maybeSingle();
 
-  if (!link) {
+  if (!link || !isLiveLink(link)) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

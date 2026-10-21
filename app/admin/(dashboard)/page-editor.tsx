@@ -4,13 +4,23 @@ import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   addLink,
+  archiveLink,
   deleteLink,
   moveLink,
   reorderLinks,
+  restoreLink,
   updateLink,
   updateProfile,
   updateTheme,
 } from "../actions";
+import {
+  agencyDay,
+  daysLeftLabel,
+  formatAgencyDay,
+  isLiveLink,
+  onPageRange,
+  todayAgencyDay,
+} from "@/lib/link-schedule";
 import { markForUrl } from "@/lib/link-mark";
 import { socialPlatformForUrl } from "@/lib/social";
 import { SocialGlyph } from "@/components/social-glyph";
@@ -45,11 +55,13 @@ export function PageEditor({
   client,
   theme,
   links,
+  archivedLinks = [],
   linkStats,
 }: {
   client: Client;
   theme: ThemeSettings | null;
   links: LinkRow[];
+  archivedLinks?: LinkRow[];
   linkStats: Record<string, LinkClickStats>;
 }) {
   const [tab, setTab] = useState<Tab>("links");
@@ -134,7 +146,14 @@ export function PageEditor({
               pending={pending}
               onAdd={(formData) => run(addLink, formData, "Link added.")}
               onUpdate={(formData) => run(updateLink, formData, "Link saved.")}
+              archivedLinks={archivedLinks}
               onDelete={(formData) => run(deleteLink, formData, "Link deleted.")}
+              onArchive={(formData) =>
+                run(archiveLink, formData, "Link archived.")
+              }
+              onRestore={(formData) =>
+                run(restoreLink, formData, "Link is back on the page.")
+              }
               onReorder={(formData) =>
                 run(reorderLinks, formData, "Order saved.")
               }
@@ -576,28 +595,36 @@ function SocialRowEditor({
 function LinksForm({
   clientId,
   links,
+  archivedLinks,
   linkStats,
   accent,
   pending,
   onAdd,
   onUpdate,
   onDelete,
+  onArchive,
+  onRestore,
   onReorder,
 }: {
   clientId: string;
   links: LinkRow[];
+  archivedLinks: LinkRow[];
   linkStats: Record<string, LinkClickStats>;
   accent: string;
   pending: boolean;
   onAdd: (formData: FormData) => void;
   onUpdate: (formData: FormData) => void;
   onDelete: (formData: FormData) => void;
+  onArchive: (formData: FormData) => void;
+  onRestore: (formData: FormData) => void;
   onReorder: (formData: FormData) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
+  const [duration, setDuration] = useState("none");
+  const [endsOn, setEndsOn] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [orderedLinks, setOrderedLinks] = useState(links);
   const [orderDirty, setOrderDirty] = useState(false);
@@ -632,6 +659,8 @@ function LinksForm({
   function resetAdd() {
     setTitle("");
     setUrl("");
+    setDuration("none");
+    setEndsOn("");
     setAdding(false);
   }
 
@@ -682,7 +711,9 @@ function LinksForm({
   }
 
   const selected = selectedId
-    ? (displayLinks.find((link) => link.id === selectedId) ?? null)
+    ? (displayLinks.find((link) => link.id === selectedId) ??
+      archivedLinks.find((link) => link.id === selectedId) ??
+      null)
     : null;
   const selectedStats = selected
     ? (linkStats[selected.id] ?? EMPTY_STATS)
@@ -746,6 +777,12 @@ function LinksForm({
                   className="mt-1 w-full rounded-lg bg-neutral-100 px-3 py-2 text-sm normal-case text-neutral-900"
                 />
               </label>
+              <DurationFields
+                duration={duration}
+                endsOn={endsOn}
+                onDuration={setDuration}
+                onEndsOn={setEndsOn}
+              />
             </div>
             <div className="mt-3 flex justify-end gap-2">
               <button
@@ -789,9 +826,9 @@ function LinksForm({
               isLast={index === displayLinks.length - 1}
               dragging={dragIndex === index}
               onUpdate={onUpdate}
-              onDelete={onDelete}
               onMoveUp={() => moveLocal(index, "up")}
               onMoveDown={() => moveLocal(index, "down")}
+              onArchive={() => onArchive(formData(clientId, link.id))}
               onDragStart={() => setDragIndex(index)}
               onDragOver={() => {
                 if (dragIndex === null || dragIndex === index) return;
@@ -810,11 +847,72 @@ function LinksForm({
         </ul>
       </div>
 
+      {archivedLinks.length > 0 ? (
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold text-neutral-900">Archive</h2>
+          <p className="mt-1 text-sm text-neutral-500">
+            Off the public page. The caption, link, and clicks stay here.
+          </p>
+          <ul className="mt-3 divide-y divide-black/5 overflow-hidden rounded-2xl border border-black/8 bg-white">
+            {archivedLinks.map((link) => {
+              const stats = linkStats[link.id] ?? EMPTY_STATS;
+              const when = link.archived_at ?? link.expires_at;
+              return (
+                <li
+                  key={link.id}
+                  className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-neutral-900">
+                      {link.title}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-neutral-500">
+                      {link.url}
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {stats.clicks} {stats.clicks === 1 ? "click" : "clicks"}
+                      {when ? ` · Archived ${formatAgencyDay(when)}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(link.id)}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+                      aria-label={`Open click trend for ${link.title}`}
+                      title="Click trend"
+                    >
+                      <ChartGlyph />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => onRestore(formData(clientId, link.id))}
+                      className="rounded-full border border-black/10 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+                    >
+                      Put back
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => onDelete(formData(clientId, link.id))}
+                      className="rounded-full px-3 py-1.5 text-sm text-neutral-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
       {selected && selectedStats ? (
         <ClickTrendModal
           id={selected.id}
           title={selected.title}
-          subtitle={`Clicks over the last 30 days · ${hostnameOf(selected.url)}`}
+          subtitle={trendSubtitle(selected)}
           clicks={selectedStats.clicks}
           today={selectedStats.today}
           share={selectedStats.share}
@@ -825,6 +923,18 @@ function LinksForm({
       ) : null}
     </div>
   );
+}
+
+function trendSubtitle(link: LinkRow): string {
+  const host = hostnameOf(link.url);
+  if (link.placement === "page" && !isLiveLink(link)) {
+    const range = onPageRange(link);
+    const start = formatAgencyDay(range.start.toISOString());
+    const end = formatAgencyDay(range.end.toISOString());
+    const span = start === end ? start : `${start} – ${end}`;
+    return `Clicks while it was on the page · ${span} · ${host}`;
+  }
+  return `Clicks over the last 30 days · ${host}`;
 }
 
 function hostnameOf(url: string): string {
@@ -845,7 +955,7 @@ function LinkRowEditor({
   isLast,
   dragging,
   onUpdate,
-  onDelete,
+  onArchive,
   onMoveUp,
   onMoveDown,
   onDragStart,
@@ -862,7 +972,7 @@ function LinkRowEditor({
   isLast: boolean;
   dragging: boolean;
   onUpdate: (formData: FormData) => void;
-  onDelete: (formData: FormData) => void;
+  onArchive: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onDragStart: () => void;
@@ -872,6 +982,18 @@ function LinkRowEditor({
 }) {
   const [title, setTitle] = useState(link.title);
   const [url, setUrl] = useState(link.url);
+  const scheduleKey = link.expires_at ?? "";
+  const [syncedSchedule, setSyncedSchedule] = useState(scheduleKey);
+  const [duration, setDuration] = useState(link.expires_at ? "date" : "none");
+  const [endsOn, setEndsOn] = useState(
+    link.expires_at ? agencyDay(link.expires_at) : "",
+  );
+  if (scheduleKey !== syncedSchedule) {
+    setSyncedSchedule(scheduleKey);
+    setDuration(link.expires_at ? "date" : "none");
+    setEndsOn(link.expires_at ? agencyDay(link.expires_at) : "");
+  }
+  const daysLeft = daysLeftLabel(link.expires_at);
   const mark = markForUrl(url || link.url, accent);
   const platform = socialPlatformForUrl(url || link.url);
 
@@ -886,6 +1008,21 @@ function LinkRowEditor({
     data.set("linkId", link.id);
     data.set("title", cleanedTitle);
     data.set("url", cleanedUrl);
+    onUpdate(data);
+  }
+
+  function saveSchedule(nextDuration: string, nextEndsOn: string) {
+    const cleanedTitle = title.trim();
+    const cleanedUrl = url.trim();
+    if (!cleanedTitle || !cleanedUrl) return;
+    if (nextDuration === "date" && !nextEndsOn) return;
+    const data = new FormData();
+    data.set("clientId", clientId);
+    data.set("linkId", link.id);
+    data.set("title", cleanedTitle);
+    data.set("url", cleanedUrl);
+    data.set("duration", nextDuration);
+    data.set("endsOn", nextEndsOn);
     onUpdate(data);
   }
 
@@ -984,13 +1121,28 @@ function LinkRowEditor({
               className="mt-0.5 w-full truncate bg-transparent text-xs text-neutral-500 outline-none"
               aria-label="Link URL"
             />
+            <DurationFields
+              duration={duration}
+              endsOn={endsOn}
+              onDuration={(next) => {
+                setDuration(next);
+                saveSchedule(next, endsOn);
+              }}
+              onEndsOn={(next) => {
+                setEndsOn(next);
+                saveSchedule(duration, next);
+              }}
+            />
           </>
         ) : (
           <>
             <p className="truncate text-sm font-semibold text-neutral-900">
               {link.title}
             </p>
-            <p className="mt-0.5 truncate text-xs text-neutral-500">{link.url}</p>
+            <p className="mt-0.5 truncate text-xs text-neutral-500">
+              {link.url}
+              {daysLeft ? ` · ${daysLeft}` : ""}
+            </p>
           </>
         )}
       </div>
@@ -1009,15 +1161,61 @@ function LinkRowEditor({
           <button
             type="button"
             disabled={pending}
-            onClick={() => onDelete(formData(clientId, link.id))}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
-            aria-label={`Delete ${link.title}`}
+            onClick={onArchive}
+            className="rounded-full px-3 py-1.5 text-sm text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 disabled:opacity-50"
           >
-            <TrashIcon />
+            Archive
           </button>
         ) : null}
       </div>
     </li>
+  );
+}
+
+function DurationFields({
+  duration,
+  endsOn,
+  onDuration,
+  onEndsOn,
+}: {
+  duration: string;
+  endsOn: string;
+  onDuration: (value: string) => void;
+  onEndsOn: (value: string) => void;
+}) {
+  return (
+    <>
+      <label className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+        On the page
+        <select
+          name="duration"
+          value={duration}
+          onChange={(event) => onDuration(event.target.value)}
+          className="mt-1 w-full rounded-lg bg-neutral-100 px-3 py-2 text-sm normal-case text-neutral-900"
+        >
+          <option value="none">Until I archive it</option>
+          <option value="7">7 days</option>
+          <option value="30">30 days</option>
+          <option value="date">Through a date</option>
+        </select>
+      </label>
+      {duration === "date" ? (
+        <label className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+          Last day
+          <input
+            type="date"
+            name="endsOn"
+            value={endsOn}
+            min={todayAgencyDay()}
+            required
+            onChange={(event) => onEndsOn(event.target.value)}
+            className="mt-1 w-full rounded-lg bg-neutral-100 px-3 py-2 text-sm normal-case text-neutral-900"
+          />
+        </label>
+      ) : (
+        <input type="hidden" name="endsOn" value="" />
+      )}
+    </>
   );
 }
 

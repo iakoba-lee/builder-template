@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser, getPrimaryClient } from "@/lib/data";
+import { expiresAtFromChoice, isLiveLink } from "@/lib/link-schedule";
 
 async function requireOwnedClient(clientId: string) {
   const { supabase } = await requireUser();
@@ -69,22 +70,30 @@ export async function addLink(formData: FormData) {
   if (!title || !url) {
     return { error: "Title and URL are required." };
   }
+  const schedule =
+    placement === "page"
+      ? expiresAtFromChoice(
+          String(formData.get("duration") ?? "none"),
+          String(formData.get("endsOn") ?? ""),
+        )
+      : { expiresAt: null };
+  if (schedule.error) return { error: schedule.error };
   const { supabase, client } = await requireOwnedClient(clientId);
   // Prepend: sit above existing links when sorted by position ascending.
   const { data: first } = await supabase
     .from("links")
-    .select("position")
+    .select("position, expires_at, archived_at")
     .eq("client_id", client.id)
     .eq("placement", placement)
-    .order("position", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .order("position", { ascending: true });
+  const firstLive = (first ?? []).find((link) => isLiveLink(link));
   const { error } = await supabase.from("links").insert({
     client_id: client.id,
     title,
     url,
     placement,
-    position: (first?.position ?? 0) - 1,
+    expires_at: schedule.expiresAt,
+    position: (firstLive?.position ?? 0) - 1,
   });
   if (error) return { error: error.message };
   revalidatePath("/", "layout");
@@ -100,9 +109,50 @@ export async function updateLink(formData: FormData) {
     return { error: "Title and URL are required." };
   }
   const { supabase } = await requireOwnedClient(clientId);
+  const patch: { title: string; url: string; expires_at?: string | null } = {
+    title,
+    url,
+  };
+  if (formData.has("duration")) {
+    const schedule = expiresAtFromChoice(
+      String(formData.get("duration") ?? "none"),
+      String(formData.get("endsOn") ?? ""),
+    );
+    if (schedule.error) return { error: schedule.error };
+    patch.expires_at = schedule.expiresAt;
+  }
   const { error } = await supabase
     .from("links")
-    .update({ title, url })
+    .update(patch)
+    .eq("id", linkId)
+    .eq("client_id", clientId);
+  if (error) return { error: error.message };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function archiveLink(formData: FormData) {
+  const clientId = String(formData.get("clientId") ?? "");
+  const linkId = String(formData.get("linkId") ?? "");
+  const { supabase } = await requireOwnedClient(clientId);
+  const { error } = await supabase
+    .from("links")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", linkId)
+    .eq("client_id", clientId)
+    .eq("placement", "page");
+  if (error) return { error: error.message };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function restoreLink(formData: FormData) {
+  const clientId = String(formData.get("clientId") ?? "");
+  const linkId = String(formData.get("linkId") ?? "");
+  const { supabase } = await requireOwnedClient(clientId);
+  const { error } = await supabase
+    .from("links")
+    .update({ archived_at: null, expires_at: null })
     .eq("id", linkId)
     .eq("client_id", clientId);
   if (error) return { error: error.message };
@@ -139,18 +189,19 @@ export async function moveLink(formData: FormData) {
 
   const { data: links } = await supabase
     .from("links")
-    .select("id, position")
+    .select("id, position, expires_at, archived_at")
     .eq("client_id", client.id)
     .eq("placement", target.placement)
     .order("position", { ascending: true });
   if (!links) return { error: "Could not load links." };
-  const index = links.findIndex((link) => link.id === linkId);
+  const liveLinks = links.filter((link) => isLiveLink(link));
+  const index = liveLinks.findIndex((link) => link.id === linkId);
   const swapWith = direction === "up" ? index - 1 : index + 1;
-  if (index < 0 || swapWith < 0 || swapWith >= links.length) {
+  if (index < 0 || swapWith < 0 || swapWith >= liveLinks.length) {
     return { ok: true };
   }
-  const current = links[index];
-  const other = links[swapWith];
+  const current = liveLinks[index];
+  const other = liveLinks[swapWith];
   const { error: firstError } = await supabase
     .from("links")
     .update({ position: other.position })
@@ -180,12 +231,14 @@ export async function reorderLinks(formData: FormData) {
   const { supabase, client } = await requireOwnedClient(clientId);
   const { data: existing } = await supabase
     .from("links")
-    .select("id")
+    .select("id, expires_at, archived_at")
     .eq("client_id", client.id)
     .eq("placement", placement);
   if (!existing) return { error: "Could not load links." };
 
-  const owned = new Set(existing.map((link) => link.id));
+  const owned = new Set(
+    existing.filter((link) => isLiveLink(link)).map((link) => link.id),
+  );
   if (
     orderedIds.length !== owned.size ||
     orderedIds.some((id) => !owned.has(id))

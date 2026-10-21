@@ -2,6 +2,19 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Client, LinkRow, ThemeSettings } from "@/lib/types";
 
+async function stampExpiredLinks(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  clientId: string,
+) {
+  const now = new Date().toISOString();
+  await supabase
+    .from("links")
+    .update({ archived_at: now })
+    .eq("client_id", clientId)
+    .is("archived_at", null)
+    .lte("expires_at", now);
+}
+
 export async function requireUser() {
   const supabase = await createClient();
   const {
@@ -35,6 +48,8 @@ export async function getPrimaryClient(supabase: Awaited<
   if (error || !client) {
     return null;
   }
+
+  await stampExpiredLinks(supabase, client.id);
 
   const [{ data: theme }, { data: links }] = await Promise.all([
     supabase

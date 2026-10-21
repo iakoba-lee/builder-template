@@ -21,4 +21,7 @@ export type LinkRow = {
   url: string;
   position: number;
   placement: "page" | "profile";
+  expires_at: string | null;
+  archived_at: string | null;
+  created_at: string;
 };
