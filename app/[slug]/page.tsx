@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { SocialGlyph } from "@/components/social-glyph";
 import { createClient } from "@/lib/supabase/server";
 import { fontStack } from "@/lib/display";
-import { markForUrl } from "@/lib/link-mark";
+import { SiteMark } from "@/components/site-mark";
 import { isLiveLink } from "@/lib/link-schedule";
 import { socialPlatformForUrl } from "@/lib/social";
 import type { Client, LinkRow, ThemeSettings } from "@/lib/types";
@@ -141,11 +141,11 @@ function PublicLinkPage({
         </section>
         <div className="mt-6 flex flex-col gap-3">
           {featured ? (
-            <PublicLinkRow link={featured} accent={accent} wide />
+            <PublicLinkRow link={featured} wide />
           ) : null}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {rest.map((link) => (
-              <PublicLinkRow key={link.id} link={link} accent={accent} />
+              <PublicLinkRow key={link.id} link={link} />
             ))}
           </div>
         </div>
@@ -156,14 +156,12 @@ function PublicLinkPage({
 
 function PublicLinkRow({
   link,
-  accent,
   wide = false,
 }: {
   link: LinkRow;
-  accent: string;
   wide?: boolean;
 }) {
-  const mark = markForUrl(link.url, accent);
+  const code = link.discount_code?.trim() || null;
   return (
     <a
       href={`/l/${link.id}`}
@@ -171,14 +169,14 @@ function PublicLinkRow({
         wide ? "sm:col-span-2" : ""
       }`}
     >
-      <span
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-lg text-white"
-        style={{ background: mark.background }}
-      >
-        ↗
-      </span>
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">
-        {link.title}
+      <SiteMark url={link.url} label={link.title} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium">{link.title}</span>
+        {code ? (
+          <span className="mt-0.5 block truncate text-xs text-white/60">
+            {code}
+          </span>
+        ) : null}
       </span>
       <span className="text-white/40">→</span>
     </a>

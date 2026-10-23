@@ -21,7 +21,7 @@ import {
   onPageRange,
   todayAgencyDay,
 } from "@/lib/link-schedule";
-import { markForUrl } from "@/lib/link-mark";
+import { SiteMark } from "@/components/site-mark";
 import { socialPlatformForUrl } from "@/lib/social";
 import { SocialGlyph } from "@/components/social-glyph";
 import type { Client, LinkRow, ThemeSettings } from "@/lib/types";
@@ -623,6 +623,7 @@ function LinksForm({
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
   const [duration, setDuration] = useState("none");
   const [endsOn, setEndsOn] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -630,7 +631,10 @@ function LinksForm({
   const [orderDirty, setOrderDirty] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const linksSignature = links
-    .map((link) => `${link.id}:${link.title}:${link.url}:${link.position}`)
+    .map(
+      (link) =>
+        `${link.id}:${link.title}:${link.url}:${link.discount_code ?? ""}:${link.position}`,
+    )
     .join("|");
   const [syncedSignature, setSyncedSignature] = useState(linksSignature);
 
@@ -659,6 +663,7 @@ function LinksForm({
   function resetAdd() {
     setTitle("");
     setUrl("");
+    setDiscountCode("");
     setDuration("none");
     setEndsOn("");
     setAdding(false);
@@ -784,6 +789,16 @@ function LinksForm({
                 onEndsOn={setEndsOn}
               />
             </div>
+            <label className="mt-3 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+              Discount code
+              <input
+                name="discountCode"
+                value={discountCode}
+                onChange={(event) => setDiscountCode(event.target.value)}
+                placeholder="Optional"
+                className="mt-1 w-full rounded-lg bg-neutral-100 px-3 py-2 text-sm normal-case text-neutral-900"
+              />
+            </label>
             <div className="mt-3 flex justify-end gap-2">
               <button
                 type="button"
@@ -819,7 +834,6 @@ function LinksForm({
               key={link.id}
               clientId={clientId}
               link={link}
-              accent={accent}
               pending={pending}
               editing={editing}
               isFirst={index === 0}
@@ -862,10 +876,17 @@ function LinksForm({
                   key={link.id}
                   className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center"
                 >
-                  <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <SiteMark url={link.url} label={link.title} />
+                    <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-neutral-900">
                       {link.title}
                     </p>
+                    {link.discount_code ? (
+                      <p className="truncate text-xs text-neutral-500">
+                        {link.discount_code}
+                      </p>
+                    ) : null}
                     <p className="mt-0.5 truncate text-xs text-neutral-500">
                       {link.url}
                     </p>
@@ -873,6 +894,7 @@ function LinksForm({
                       {stats.clicks} {stats.clicks === 1 ? "click" : "clicks"}
                       {when ? ` · Archived ${formatAgencyDay(when)}` : ""}
                     </p>
+                    </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <button
@@ -948,7 +970,6 @@ function hostnameOf(url: string): string {
 function LinkRowEditor({
   clientId,
   link,
-  accent,
   pending,
   editing,
   isFirst,
@@ -965,7 +986,6 @@ function LinkRowEditor({
 }: {
   clientId: string;
   link: LinkRow;
-  accent: string;
   pending: boolean;
   editing: boolean;
   isFirst: boolean;
@@ -982,6 +1002,13 @@ function LinkRowEditor({
 }) {
   const [title, setTitle] = useState(link.title);
   const [url, setUrl] = useState(link.url);
+  const codeKey = link.discount_code ?? "";
+  const [syncedCode, setSyncedCode] = useState(codeKey);
+  const [discountCode, setDiscountCode] = useState(codeKey);
+  if (codeKey !== syncedCode) {
+    setSyncedCode(codeKey);
+    setDiscountCode(codeKey);
+  }
   const scheduleKey = link.expires_at ?? "";
   const [syncedSchedule, setSyncedSchedule] = useState(scheduleKey);
   const [duration, setDuration] = useState(link.expires_at ? "date" : "none");
@@ -994,20 +1021,27 @@ function LinkRowEditor({
     setEndsOn(link.expires_at ? agencyDay(link.expires_at) : "");
   }
   const daysLeft = daysLeftLabel(link.expires_at);
-  const mark = markForUrl(url || link.url, accent);
-  const platform = socialPlatformForUrl(url || link.url);
+  const markUrl = url || link.url;
 
   function saveIfChanged() {
     if (!editing) return;
     const cleanedTitle = title.trim();
     const cleanedUrl = url.trim();
+    const cleanedCode = discountCode.trim();
     if (!cleanedTitle || !cleanedUrl) return;
-    if (cleanedTitle === link.title && cleanedUrl === link.url) return;
+    if (
+      cleanedTitle === link.title &&
+      cleanedUrl === link.url &&
+      cleanedCode === (link.discount_code ?? "")
+    ) {
+      return;
+    }
     const data = new FormData();
     data.set("clientId", clientId);
     data.set("linkId", link.id);
     data.set("title", cleanedTitle);
     data.set("url", cleanedUrl);
+    data.set("discountCode", cleanedCode);
     onUpdate(data);
   }
 
@@ -1021,6 +1055,7 @@ function LinkRowEditor({
     data.set("linkId", link.id);
     data.set("title", cleanedTitle);
     data.set("url", cleanedUrl);
+    data.set("discountCode", discountCode.trim());
     data.set("duration", nextDuration);
     data.set("endsOn", nextEndsOn);
     onUpdate(data);
@@ -1075,22 +1110,7 @@ function LinkRowEditor({
         </div>
       ) : null}
 
-      <span
-        className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl text-white"
-        style={{
-          background: platform ? "#fff" : mark.background,
-          color: platform ? accent : "#fff",
-          border: platform ? "1px solid rgba(0,0,0,0.08)" : undefined,
-        }}
-      >
-        {platform ? (
-          <SocialGlyph platform={platform} size={18} />
-        ) : (
-          <span className="text-sm font-semibold">
-            {(title || link.title).slice(0, 1).toUpperCase() || "↗"}
-          </span>
-        )}
-      </span>
+      <SiteMark key={markUrl} url={markUrl} label={title || link.title} />
 
       <div className="min-w-0 flex-1">
         {editing ? (
@@ -1121,6 +1141,20 @@ function LinkRowEditor({
               className="mt-0.5 w-full truncate bg-transparent text-xs text-neutral-500 outline-none"
               aria-label="Link URL"
             />
+            <input
+              value={discountCode}
+              onChange={(event) => setDiscountCode(event.target.value)}
+              onBlur={saveIfChanged}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.currentTarget.blur();
+                }
+              }}
+              disabled={pending}
+              placeholder="Discount code"
+              className="mt-0.5 w-full truncate bg-transparent text-xs text-neutral-500 outline-none placeholder:text-neutral-400"
+              aria-label="Discount code"
+            />
             <DurationFields
               duration={duration}
               endsOn={endsOn}
@@ -1139,6 +1173,11 @@ function LinkRowEditor({
             <p className="truncate text-sm font-semibold text-neutral-900">
               {link.title}
             </p>
+            {link.discount_code ? (
+              <p className="truncate text-xs text-neutral-500">
+                {link.discount_code}
+              </p>
+            ) : null}
             <p className="mt-0.5 truncate text-xs text-neutral-500">
               {link.url}
               {daysLeft ? ` · ${daysLeft}` : ""}

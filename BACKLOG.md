@@ -37,4 +37,8 @@ into a sprint they don't belong in. Pull from here when planning the next sprint
   admin for photo and kit prices. API research from Sprint 2 planning: YouTube, Instagram, and
   Threads demographics look feasible (Meta dev mode with creators as testers may avoid app
   review); TikTok and Facebook demographics likely need manual entry. Spike platform access
-  first. Weigh against buying (e.g. CreatorJet) — record as a decision.
+  first. Buy vs build vs hybrid recorded as open decision 004
+  (`decisions/004-media-kit-buy-vs-build.md`) — choose before scoping a build.
+- **Grokbot link management.** Let Grokbot create and edit links (and related admin actions)
+  without a human in the admin UI. Open question: expose a small authenticated API for the
+  bot, or have Grokbot Desktop log into the existing admin and drive the UI.

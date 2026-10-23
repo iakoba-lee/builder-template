@@ -19,6 +19,7 @@ export type LinkRow = {
   client_id: string;
   title: string;
   url: string;
+  discount_code: string | null;
   position: number;
   placement: "page" | "profile";
   expires_at: string | null;

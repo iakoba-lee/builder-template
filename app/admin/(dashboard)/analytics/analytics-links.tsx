@@ -35,6 +35,7 @@ export function AnalyticsLinks({
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("clicks");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showShare, setShowShare] = useState(true);
 
   const sorted = useMemo(() => {
     const next = [...links];
@@ -49,23 +50,45 @@ export function AnalyticsLinks({
   const maxClicks = Math.max(1, ...links.map((link) => link.clicks));
 
   function cycleSort() {
-    const order: SortKey[] = ["clicks", "today", "share"];
+    const order: SortKey[] = showShare
+      ? ["clicks", "today", "share"]
+      : ["clicks", "today"];
     const index = order.indexOf(sortKey);
     setSortKey(order[(index + 1) % order.length]);
   }
 
+  function toggleShare() {
+    setShowShare((current) => {
+      const next = !current;
+      if (!next && sortKey === "share") {
+        setSortKey("clicks");
+      }
+      return next;
+    });
+  }
+
   return (
     <section className="mt-6">
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">{heading}</h2>
-        <button
-          type="button"
-          onClick={cycleSort}
-          className="text-sm text-neutral-500 transition-colors hover:text-neutral-800"
-          aria-label={`Change ranking. Currently ${SORT_LABELS[sortKey]}`}
-        >
-          {SORT_LABELS[sortKey]}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={toggleShare}
+            className="text-sm text-neutral-500 transition-colors hover:text-neutral-800"
+            aria-pressed={!showShare}
+          >
+            {showShare ? "Hide share" : "Show share"}
+          </button>
+          <button
+            type="button"
+            onClick={cycleSort}
+            className="text-sm text-neutral-500 transition-colors hover:text-neutral-800"
+            aria-label={`Change ranking. Currently ${SORT_LABELS[sortKey]}`}
+          >
+            {SORT_LABELS[sortKey]}
+          </button>
+        </div>
       </div>
       <ul className="flex flex-col gap-3">
         {sorted.map((link) => {
@@ -89,7 +112,9 @@ export function AnalyticsLinks({
                 <div className="hidden shrink-0 items-end gap-6 sm:flex">
                   <Metric value={link.clicks} label="Clicks" />
                   <Metric value={link.today} label="Today" />
-                  <Metric value={`${link.share}%`} label="Share" />
+                  {showShare ? (
+                    <Metric value={`${link.share}%`} label="Share" />
+                  ) : null}
                 </div>
                 <button
                   type="button"
@@ -103,7 +128,9 @@ export function AnalyticsLinks({
               <div className="flex gap-4 px-5 pb-3 text-sm sm:hidden">
                 <Metric value={link.clicks} label="Clicks" compact />
                 <Metric value={link.today} label="Today" compact />
-                <Metric value={`${link.share}%`} label="Share" compact />
+                {showShare ? (
+                  <Metric value={`${link.share}%`} label="Share" compact />
+                ) : null}
               </div>
               <div className="h-1.5 w-full bg-neutral-100">
                 <div
@@ -128,7 +155,7 @@ export function AnalyticsLinks({
           }
           clicks={selected.clicks}
           today={selected.today}
-          share={selected.share}
+          share={showShare ? selected.share : undefined}
           series={selected.series}
           accent={accent}
           onClose={() => setSelectedId(null)}

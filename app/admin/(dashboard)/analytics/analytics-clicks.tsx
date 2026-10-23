@@ -34,6 +34,15 @@ function yAxisTicks(max: number, count = 4): number[] {
   return ticks;
 }
 
+function formatDayLabel(day: string) {
+  const date = new Date(`${day}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return day.slice(5);
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export function AnalyticsClicks({
   todayCount,
   ranges,
@@ -44,6 +53,7 @@ export function AnalyticsClicks({
   accent: string;
 }) {
   const [rangeKey, setRangeKey] = useState<ClicksRangeKey>("7d");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const range =
     ranges.find((item) => item.key === rangeKey) ??
     ranges.find((item) => item.key === "7d") ??
@@ -62,15 +72,15 @@ export function AnalyticsClicks({
     const bottomPad = 28;
     const plotWidth = width - leftPad - rightPad;
     const plotHeight = height - topPad - bottomPad;
-    const points = series.map((point, index) => {
+    const plotted = series.map((point, index) => {
       const x = leftPad + (index / Math.max(1, series.length - 1)) * plotWidth;
       const y = topPad + plotHeight - (point.count / chartMax) * plotHeight;
-      return `${x},${y}`;
+      return { ...point, x, y };
     });
     const labelEvery = Math.max(1, Math.ceil(series.length / 7));
-    const xLabels = series.filter(
+    const xLabels = plotted.filter(
       (_, index) =>
-        index % labelEvery === 0 || index === series.length - 1,
+        index % labelEvery === 0 || index === plotted.length - 1,
     );
     return {
       width,
@@ -81,11 +91,14 @@ export function AnalyticsClicks({
       plotHeight,
       chartMax,
       ticks,
-      points,
-      series,
+      plotted,
       xLabels,
+      points: plotted.map((point) => `${point.x},${point.y}`),
     };
   }, [range]);
+
+  const hovered =
+    hoveredIndex === null ? null : (chart.plotted[hoveredIndex] ?? null);
 
   return (
     <section className="mt-6 rounded-xl bg-white p-6 shadow-sm">
@@ -100,7 +113,10 @@ export function AnalyticsClicks({
               <button
                 key={key}
                 type="button"
-                onClick={() => setRangeKey(key)}
+                onClick={() => {
+                  setRangeKey(key);
+                  setHoveredIndex(null);
+                }}
                 className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
                   active
                     ? "bg-white font-medium text-neutral-900 shadow-sm"
@@ -128,57 +144,77 @@ export function AnalyticsClicks({
           </p>
         </div>
       </div>
-      <svg
-        viewBox={`0 0 ${chart.width} ${chart.height}`}
-        className="mt-6 w-full"
-        role="img"
-        aria-label={`Clicks for ${range?.label ?? "selected range"}`}
+      <div
+        className="relative mt-6"
+        onMouseLeave={() => setHoveredIndex(null)}
       >
-        {chart.ticks.map((tick) => {
-          const y =
-            chart.topPad +
-            chart.plotHeight -
-            (tick / chart.chartMax) * chart.plotHeight;
-          return (
-            <g key={tick}>
+        <svg
+          viewBox={`0 0 ${chart.width} ${chart.height}`}
+          className="w-full"
+          role="img"
+          aria-label={`Clicks for ${range?.label ?? "selected range"}`}
+        >
+          {chart.ticks.map((tick) => {
+            const y =
+              chart.topPad +
+              chart.plotHeight -
+              (tick / chart.chartMax) * chart.plotHeight;
+            return (
+              <g key={tick}>
+                <line
+                  x1={chart.leftPad}
+                  x2={chart.width - chart.rightPad}
+                  y1={y}
+                  y2={y}
+                  stroke="#e5e7eb"
+                  strokeWidth="1"
+                />
+                <text
+                  x={chart.leftPad - 8}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="12"
+                  fontWeight="500"
+                  fill="#4b5563"
+                >
+                  {tick}
+                </text>
+              </g>
+            );
+          })}
+          <polyline
+            fill="none"
+            stroke={accent}
+            strokeWidth="3"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            points={chart.points.join(" ")}
+          />
+          {hovered ? (
+            <>
               <line
-                x1={chart.leftPad}
-                x2={chart.width - chart.rightPad}
-                y1={y}
-                y2={y}
-                stroke="#e5e7eb"
-                strokeWidth="1"
+                x1={hovered.x}
+                x2={hovered.x}
+                y1={chart.topPad}
+                y2={chart.topPad + chart.plotHeight}
+                stroke={accent}
+                strokeOpacity="0.25"
+                strokeWidth="1.5"
               />
-              <text
-                x={chart.leftPad - 8}
-                y={y + 4}
-                textAnchor="end"
-                fontSize="12"
-                fontWeight="500"
-                fill="#4b5563"
-              >
-                {tick}
-              </text>
-            </g>
-          );
-        })}
-        <polyline
-          fill="none"
-          stroke={accent}
-          strokeWidth="3"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          points={chart.points.join(" ")}
-        />
-        {chart.xLabels.map((point) => {
-          const index = chart.series.findIndex((item) => item.day === point.day);
-          const x =
-            chart.leftPad +
-            (index / Math.max(1, chart.series.length - 1)) * (chart.width - chart.leftPad - chart.rightPad);
-          return (
+              <circle
+                cx={hovered.x}
+                cy={hovered.y}
+                r="5"
+                fill="white"
+                stroke={accent}
+                strokeWidth="2.5"
+              />
+            </>
+          ) : null}
+          {chart.xLabels.map((point) => (
             <text
               key={point.day}
-              x={x}
+              x={point.x}
               y={chart.height - 6}
               textAnchor="middle"
               fontSize="11"
@@ -186,9 +222,45 @@ export function AnalyticsClicks({
             >
               {point.day.slice(5)}
             </text>
-          );
-        })}
-      </svg>
+          ))}
+          {chart.plotted.map((point, index) => {
+            const hitWidth = Math.max(
+              18,
+              chart.width / Math.max(chart.plotted.length, 1),
+            );
+            return (
+              <rect
+                key={point.day}
+                x={point.x - hitWidth / 2}
+                y={chart.topPad}
+                width={hitWidth}
+                height={chart.plotHeight}
+                fill="transparent"
+                onMouseEnter={() => setHoveredIndex(index)}
+                onFocus={() => setHoveredIndex(index)}
+                tabIndex={0}
+                role="img"
+                aria-label={`${formatDayLabel(point.day)}: ${point.count} clicks`}
+              />
+            );
+          })}
+        </svg>
+        {hovered ? (
+          <div
+            className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-neutral-900 px-2.5 py-1.5 text-xs text-white shadow-lg"
+            style={{
+              left: `${(hovered.x / chart.width) * 100}%`,
+              top: `${(hovered.y / chart.height) * 100}%`,
+              marginTop: "-10px",
+            }}
+          >
+            <p className="font-medium">{formatDayLabel(hovered.day)}</p>
+            <p className="text-white/80">
+              {hovered.count} {hovered.count === 1 ? "click" : "clicks"}
+            </p>
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

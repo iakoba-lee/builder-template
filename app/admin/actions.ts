@@ -13,6 +13,11 @@ async function requireOwnedClient(clientId: string) {
   return { supabase, client: loaded.client };
 }
 
+function discountCodeFromForm(formData: FormData): string | null {
+  const raw = String(formData.get("discountCode") ?? "").trim();
+  return raw || null;
+}
+
 function normalizeUrl(raw: string) {
   const trimmed = raw.trim();
   if (!trimmed) return "";
@@ -92,6 +97,7 @@ export async function addLink(formData: FormData) {
     title,
     url,
     placement,
+    discount_code: placement === "page" ? discountCodeFromForm(formData) : null,
     expires_at: schedule.expiresAt,
     position: (firstLive?.position ?? 0) - 1,
   });
@@ -109,10 +115,18 @@ export async function updateLink(formData: FormData) {
     return { error: "Title and URL are required." };
   }
   const { supabase } = await requireOwnedClient(clientId);
-  const patch: { title: string; url: string; expires_at?: string | null } = {
+  const patch: {
+    title: string;
+    url: string;
+    discount_code?: string | null;
+    expires_at?: string | null;
+  } = {
     title,
     url,
   };
+  if (formData.has("discountCode")) {
+    patch.discount_code = discountCodeFromForm(formData);
+  }
   if (formData.has("duration")) {
     const schedule = expiresAtFromChoice(
       String(formData.get("duration") ?? "none"),
