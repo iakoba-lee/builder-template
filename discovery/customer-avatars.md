@@ -1,120 +1,111 @@
 # Customer avatars
 
-> Copied from the agency's Obsidian vault (`Custom Adventurist/Sandbox/Customer Avatars.md`),
-> written Oct 1, 2026. These are agency-side avatars for the sponsorship-management offer. The
-> per-product personas live in [personas.md](personas.md). Inbox data backing the Established tier
-> is in [data/ca-inbox/](data/ca-inbox/README.md).
+> Agency-side avatars for the sponsorship-management offer. Per-product personas live in
+> [personas.md](personas.md). Inbox data backing the Established tier is in
+> [data/ca-inbox/](data/ca-inbox/README.md). Sprint 3 bet that uses these tiers:
+> [problem-bet.md](problem-bet.md).
 
-Updated Oct 1, 2026, based on the client snapshot below.
+**Last updated:** 2026-10-26 (tiers and funnel refreshed; Escape Tech and Creator E added as
+Emerging examples). Earlier vault copy dated Oct 1, 2026.
 
-Tiers are based on monthly brand-deal revenue, not follower count. Follower count is a weak signal across platforms (Ben Kimball AI has 8.9K on YouTube but 43K on Instagram and does ~$10K/month), and revenue is what our 20% is paid out of.
+We tier creators by **monthly brand-deal revenue, not follower count**. Followers are a weak
+signal: Ben Kimball AI has 8.9K on YouTube but 43K on Instagram and does ~$10K/month. Our 20%
+comes out of revenue, so revenue is what matters.
 
-| Tier | Brand deals / month | Our 20% / month | Current example |
+| Tier | Brand deals / month | Our 20% / month | Example |
 | --- | --- | --- | --- |
-| Emerging | $0–5K | up to ~$1K | Kimball AI (~$3K) |
-| Breakout | $5–15K | ~$1K–3K | Ben Kimball AI (~$10K) |
-| Established | $15K+ | $3K+ | Custom Adventurist (~$20K) |
+| Emerging | $0–5K | up to ~$1K | Kimball AI, Escape Tech, Creator E |
+| Breakout (core buyer) | $5–15K | ~$1–3K | Ben Kimball AI |
+| Established | $15K+ | $3K+ | Custom Adventurist |
 
-Things all three have in common:
+## What all our creators have in common
 
-- **Short-form first, or at least multi-platform.** Two of our three customers are biggest on TikTok or Instagram. Assume a creator is on IG, TikTok and YouTube, with deals that bundle across them.
-- **Niche brands will pay for.** Tech and AI so far, plus outdoor/adventure with Custom Adventurist. Finance, productivity, software and lifestyle also fit. Whatever the niche, the thing to look for is steady inbound sponsor interest.
-- **Where they hang out:** Instagram and TikTok first, then YouTube, creator Discords and communities, X/Twitter, creator-economy newsletters and podcasts.
+- **Short-form first, or multi-platform.** Assume they're on IG, TikTok, and YouTube, with deals
+  that bundle across platforms.
+- **A niche brands pay for.** So far that's tech/AI and outdoor/adventure. Finance, productivity,
+  software, and lifestyle also fit. The real signal is steady inbound sponsor interest.
+- **Where they hang out:** Instagram and TikTok first, then YouTube, creator Discords and
+  communities, X, and creator-economy newsletters and podcasts.
 
-## Tier 1: Emerging ($0–5K/month)
+## Emerging ($0–5K/month)
 
-**Who:** Roughly 10k–50k combined followers. Posts consistently and takes it seriously, but sponsorships are new. Kimball AI fits this: it just landed its first sponsorships. Often has a day job or is in school.
+**Who:** roughly 10K–50K combined followers. Posts consistently, but sponsorships are new. Often
+has a day job or is in school.
 
-**What they want:** Proof that this can make real money. A first few deals show them it's working.
-
-**Pains:**
-
-- They don't know how to find brands, what to say in a pitch, or what to charge.
-- They feel too small to be taken seriously and have probably sent pitches that got no reply.
-- They don't have a media kit or rate card, and the first brand that asks for one catches them off guard.
-
-**Are they a buyer?** Yes, once inbound brand interest starts. Before that they're audience. Free content gets them their first deal or two, and each success becomes social proof. The cut is small at this tier, so the case for signing them is that they grow into Breakout.
-
-**Our goal with them:** Before their first deals, get their email or community membership and stay in touch. Once the first brand deals show up, offer the audit.
-
-## Tier 2: Breakout ($5–15K/month), the core buyer
-
-**Who:** Roughly 50k–250k combined followers. They've done somewhere between 3 and 15 deals, mostly from brands that reached out to them. Ben Kimball AI fits this.
-
-**Situation:** Sponsor emails and DMs arrive every week, and the inbox is a mess. They negotiate on gut feel, set rates by guessing, and track deliverables in their head or a spreadsheet. They've almost certainly underpriced deals and know it. Pricing short-form is especially fuzzy for them: what a Reel is worth vs. a TikTok vs. a YouTube integration, what to charge for usage rights, and how to bundle.
+**Wants:** proof this can make real money.
 
 **Pains:**
 
-- Admin eats hours that should go to making content.
-- They worry they're leaving money on the table but have no benchmark to check.
-- They've had at least one bad experience, like late payment, scope creep, a missed deliverable, or a brand running their content as ads longer than agreed.
-- Income swings wildly from month to month.
+- Doesn't know how to find brands, what to pitch, or what to charge.
+- Feels too small to be taken seriously; pitches get ignored.
+- No media kit or rate card.
 
-**Desires:** Steady, predictable sponsor income at fair rates, and freedom to just create.
+**Our approach:** before their first deals, get their email or community membership and stay in
+touch. Once brand interest shows up, offer the audit. The cut is small, so the case for signing
+them is that they grow into Breakout.
 
-**Fears and objections:**
+## Breakout ($5–15K/month): the core buyer
 
-- "Agencies take a huge cut."
-- "I'll lose control of which brands I work with."
-- "I'll get locked into a long contract."
-- "I can do this myself."
+**Who:** roughly 50K–250K combined followers, 3–15 deals done, mostly inbound.
 
-**Moments when they're ready to buy:**
+**Situation:** sponsor emails and DMs every week and a messy inbox. They negotiate on gut feel,
+guess at rates, and track deliverables in their head. They've almost certainly underpriced deals,
+especially short-form and usage rights.
 
-- A brand asks for a rate card or media kit and they don't have one.
-- They miss or fumble a deal because they were busy.
-- They find out a creator their size charges twice as much.
-- Deal volume crosses about 2–3 per month.
+**Pains:** admin eats creating time; no benchmark for rates; at least one bad experience (late
+payment, scope creep, content run as ads too long); income swings month to month.
 
-## Tier 3: Established ($15K+/month)
+**Objections:** "Agencies take a huge cut." "I'll lose control of which brands I work with." "I'll
+get locked into a long contract." "I can do this myself."
 
-**Who:** 250k+ combined, sometimes well over a million. Custom Adventurist fits this at ~1.38M and ~$20K/month. Deal flow is steady and the creator is already running it like a business, maybe with an editor or a VA.
+**Ready to buy when:** a brand asks for a rate card they don't have, they fumble a deal from being
+busy, they learn a peer charges twice as much, or deal volume passes ~2–3 per month.
 
-**Situation:** The problem isn't finding deals anymore. It's volume and leverage. They're handling more deals than they can negotiate well, and at this size a small rate improvement is real money. A 15% better rate on $20K/month is $3K/month.
+**Best pitch:** the brand referral pool. It answers "I can do this myself": you can't if you don't
+have access to those brands.
 
-**Pains:**
+## Established ($15K+/month)
 
-- Too many deals to give each one a real negotiation.
-- Long-term partnerships, exclusivity, and usage-rights terms get complicated and they're signing things they haven't fully read.
-- They've hit a ceiling on rates and don't know what creators their size get.
-- Running the sponsorship side takes time away from content, and they'd rather hand it off completely than manage someone.
+**Who:** 250K+ combined, sometimes 1M+. Steady deal flow, already run like a business, maybe with
+an editor or VA.
 
-**Desires:** Hand off the whole sponsorship side to someone they trust. Fewer, bigger, longer deals.
+**Situation:** the problem is volume and leverage, not finding deals. A 15% better rate on
+$20K/month is $3K/month.
 
-**Fears and objections:**
+**Pains:** too many deals to negotiate each well; complex long-term, exclusivity, and usage terms;
+hit a rate ceiling; would rather hand it off completely than manage someone.
 
-- "I already have more deals than I can handle, so what do I need you for?"
-- "20% of my deal revenue is a lot of money."
-- "A bigger agency or a manager would get me more."
+**Objections:** "I already have more deals than I can handle." "20% is a lot." "A bigger agency
+would get me more."
 
-**Moments when they're ready to buy:**
+**Ready to buy when:** they lose a big deal from slow replies, get a long-term or exclusive
+contract they can't evaluate, or their current manager drops the ball.
 
-- They turn down or lose a big deal because they couldn't respond in time.
-- A long-term or exclusive contract shows up and they don't know whether the terms are good.
-- Their current manager or agency drops the ball.
+**Best pitch:** rates and terms, with Custom Adventurist as the case study. These creators usually
+come through referrals and direct outreach, not content.
 
-## How the funnel connects them
+## How the funnel connects the tiers
 
-Beginner content brings in Emerging creators and builds trust. A second content track speaks to Breakout problems: pricing (especially short-form and usage rights), negotiating, and handling deal volume. That track hooks Breakout creators directly and gives growing Emerging creators somewhere to go next.
-
-The free profile audit is the bridge to the paid offer for all three tiers. It could be framed as "find out if you're undercharging," which hits the biggest fear for Breakout and Established creators head-on.
-
-Established creators probably won't come through content. They'll come through referrals and direct outreach, with Custom Adventurist as the case study.
-
-The brand referral pool is probably our strongest selling point for Breakout. It answers "I can do this myself": you can't do it yourself if you don't have access to those brands. For Established creators the pitch is less about access and more about rates and terms. Custom Adventurist is the proof for that.
+- Beginner content brings in Emerging creators and builds trust.
+- A second content track covers Breakout problems: pricing (short-form, usage rights),
+  negotiating, and handling volume.
+- The **free profile audit** is the bridge to the paid offer for every tier. Frame it as "find out
+  if you're undercharging."
 
 ## Client snapshot (Oct 1, 2026)
 
 Combined follower counts from SocialBlade and public API trackers. Brand-deal revenue is the
-monthly average.
+monthly average. Escape Tech and Creator E were added to Emerging later (2026-10-26); refresh
+platform counts when you have a clean snapshot.
 
 | Client | TikTok | YouTube | Instagram | Combined | Brand deals / month |
 | --- | --- | --- | --- | --- | --- |
 | Custom Adventurist | 642.9K | 470K | 266K | ~1.38M | ~$20K |
 | Ben Kimball AI (partner's) | 18.3K | 8.9K | 43.3K | ~70.5K | ~$10K |
 | Kimball AI (outside client) | 4.3K | 1.9K | 12.1K | ~18.3K | ~$3K (new, first sponsorships) |
+| Creator E (outside, travel) | largest account (exact TBD) | long-form sparse | ~68–70K | TBD | Emerging: mostly AdSense; brand months uncommon (~$0–1.5K typical, best month ~$3.5K named on intake) |
 
-All three together: ~1.47M followers and subscribers.
+Oct 1 snapshot (first three only): ~1.47M followers and subscribers.
 
 ## Earlier draft (Skool funnel notes)
 

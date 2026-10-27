@@ -156,3 +156,44 @@ One brand conversation, brief and unrecorded, so treat this as a lead, not a fin
   it. Ask the next one.
 - Do brands see a talent agency like ours as the same as the agencies they're tired of?
 - Brand interviews remain the thinnest area: one conversation, unrecorded.
+
+---
+
+# Sprint 3 addendum
+
+**Written:** 2026-10-26. **Plan:** `sprints/sprint-3-plan.md`. **Decision write-up:**
+[`problem-bet.md`](problem-bet.md).
+
+## What was added
+
+| Interview | Group | Recorded | Notes |
+|---|---|---|---|
+| [Creator E](interviews/2026-10-21-creator-e-part-time-travel-youtuber.md) (+ [follow-up](interviews/2026-10-26-creator-e-onboarding-followup.md)) | Travel YouTuber → agency client | Yes | **Outside tech/AI.** Sparse legit mail; fluff/scam volume; $5k×6 quit bar. |
+| [Creator R sales](interviews/2026-10-08-creator-r-sales-discovery.md) + [onboarding](interviews/2026-10-16-creator-r-tech-client-onboarding.md) | Tech phone creator, outside client | Yes | Inbox lag (~5/day); underpricing (~$300 “random”); low close rate on real inquiries. |
+| [Privacy / data-removal brand](interviews/2026-10-24-brand-privacy-data-removal.md) | Brand campaign call | Yes | Long-form education ask; coupon redemptions; 6–12 month interest. |
+
+## What changed
+
+1. **Outside tech/AI (one creator):** Same sponsorship pains show up, but not as pure “don’t know
+   the steps.” Creator E already time-blocks email and pitches travel brands. The gap is **flat-rate
+   deal volume and trusted help**, not a beginner checklist.
+2. **Inbox/admin + pricing still the paid core:** Creator R matches Sprint 2’s busy-creator
+   pattern (pile-up, undercharging, close-rate gap). That is where the agency already makes money.
+3. **Brand signal (stronger, still incomplete):** One recorded brand call. They optimize for
+   **education content and redemptions**, not link-page clicks. The two Sprint 3 brand questions
+   (click data; talent managers vs agencies) were **not asked**.
+4. **Primary bet written down:** See [`problem-bet.md`](problem-bet.md) — Breakout-shaped
+   inbox/pricing as the agency bet; pricing content series as the smallest test; **pause** further
+   link-page product focus while keeping it as a client deliverable.
+5. **Negotiation ops:** Sandbox guest session this week →
+   [`negotiation-framework.md`](negotiation-framework.md) (seven elements mapped to brand deals).
+   Supports the pricing/close-rate side of the bet (criteria, BATNA, written commitment).
+6. **Revenue streams written down:** [`revenue-streams.md`](revenue-streams.md) — core
+   management (20/30, 10–20 creators, $25–50K MRR), Skool/CreatorOS for too-small-to-manage,
+   brand outreach / multi-creator campaigns. Sequencing and per-stream targets still open.
+
+## Still open
+
+- Second outside-tech/AI creator (plan asked for 2+; we have 1).
+- Explicit brand answers on link-page click data and “agency” framing.
+- Whether Emerging creators pay for setup/coaching, or only convert once inbound starts.
